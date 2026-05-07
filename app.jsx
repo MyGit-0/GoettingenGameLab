@@ -244,10 +244,21 @@ function Gamepad() {
 // ============= MINIGAME (platformer overlay) =============
 function MiniGame() {
   const [playing, setPlaying] = useState(false);
-  const [pos, setPos] = useState({ x: 200, y: 0, facing: 1 });
-  const ref = useRef({ x: 200, y: 100, vx: 0, vy: 0, onGround: false, facing: 1 });
+  const [pos, setPos] = useState({ x: 200, y: 0, facing: 1, moving: false, onGround: false });
+  const ref = useRef({
+    x: 200, y: 100, vx: 0, vy: 0,
+    onGround: false, facing: 1,
+    // jump state
+    jumpConsumed: true,       // true = jump key was already handled, prevents hold-repeat
+    coyoteTimer: 0,           // frames left where jump is still allowed after walking off edge
+    jumpBuffer: 0,            // frames left where a pre-landing jump press is remembered
+  });
   const platformsRef = useRef([]);
   const tickerRef = useRef(null);
+  const playingRef = useRef(false);
+
+  // keep ref in sync so the keydown handler can check it
+  useEffect(() => { playingRef.current = playing; }, [playing]);
 
   // listen for the secret key / button
   useEffect(() => {
@@ -258,11 +269,44 @@ function MiniGame() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
+  // prevent page scroll for game keys while playing
+  useEffect(() => {
+    if (!playing) return;
+    const GAME_KEYS = new Set([
+      'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
+      'Space', 'KeyW', 'KeyA', 'KeyS', 'KeyD',
+    ]);
+    const prevent = (e) => {
+      if (playingRef.current && GAME_KEYS.has(e.code)) {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener('keydown', prevent, { passive: false });
+    return () => window.removeEventListener('keydown', prevent);
+  }, [playing]);
+
+  // track jump-press edge (consumed flag resets when key is released)
+  useEffect(() => {
+    const onInput = (key, val) => {
+      if (key === 'jump') {
+        if (val) {
+          // key just pressed — allow a new jump
+          ref.current.jumpConsumed = false;
+          ref.current.jumpBuffer = 8; // buffer for ~8 frames
+        } else {
+          ref.current.jumpConsumed = true;
+        }
+      }
+    };
+    inputListeners.add(onInput);
+    return () => inputListeners.delete(onInput);
+  }, []);
+
   // gather platforms once playing starts; refresh on resize/scroll occasionally
   useEffect(() => {
     if (!playing) return;
     const collect = () => {
-      const sel = '[data-platform], .tape, .btn, .tag, .stat, .workshop-num, .cd-cell, .sp-card, .nav-cta, .cta-big, .jam-prize, .section-title, .gp-hint, .footer-bot, .partner-logo';
+      const sel = '[data-platform], .play-toggle, .tape, .btn, .tag, .stat, .workshop-num, .cd-cell, .sp-card, .nav-cta, .cta-big, .jam-prize, .section-title, .gp-hint, .footer-bot, .partner-logo, .nav, .eyebrow, .hero-title, .hero-sub, .hero-tags, .kicker, .workshop-title, .workshop-output, .faq-q, .prize-stamp, .prize-kicker, .ticket, .countdown, .jam-eyebrow, .jam-title, .apply-title, .apply-frame-bar, .apply-meta-row, .footer-col h5, .logo, .float-badge, .tab, .speaker-avatar, .play-banner';
       const nodes = document.querySelectorAll(sel);
       const list = [];
       nodes.forEach((n) => {
@@ -287,9 +331,11 @@ function MiniGame() {
     collect();
     const onResize = () => collect();
     window.addEventListener('resize', onResize);
+    window.addEventListener('scroll', collect, { passive: true });
     const reCollect = setInterval(collect, 600);
     return () => {
       window.removeEventListener('resize', onResize);
+      window.removeEventListener('scroll', collect);
       clearInterval(reCollect);
     };
   }, [playing]);
@@ -297,49 +343,91 @@ function MiniGame() {
   // physics loop
   useEffect(() => {
     if (!playing) return;
-    // initial spawn near center top of viewport
+    // spawn on top of the PLAY button
+    const playBtn = document.querySelector('.play-toggle');
+    let spawnX = window.scrollX + window.innerWidth / 2 - 12;
+    let spawnY = window.scrollY + 80;
+    if (playBtn) {
+      const r = playBtn.getBoundingClientRect();
+      spawnX = r.left + window.scrollX + r.width / 2 - 13;
+      spawnY = r.top + window.scrollY - 32;
+    }
     ref.current = {
-      x: window.scrollX + window.innerWidth / 2 - 12,
-      y: window.scrollY + 80,
+      ...ref.current,
+      x: spawnX,
+      y: spawnY,
       vx: 0, vy: 0, onGround: false, facing: 1,
+      jumpConsumed: true, coyoteTimer: 0, jumpBuffer: 0,
     };
     let last = performance.now();
     const W = 26, H = 28;
     const GRAVITY = 1800;
-    const MOVE = 320;
-    const JUMP = 640;
-    const FRICTION = 1500;
+    const ACCEL = 2400;       // how fast the player accelerates
+    const MAX_SPEED = 340;    // top run speed
+    const FRICTION = 1800;    // deceleration when no input
+    const JUMP = 1050;
+    const COYOTE_FRAMES = 6;  // forgiveness frames after leaving edge
 
     const step = (t) => {
       const dt = Math.min(0.033, (t - last) / 1000);
       last = t;
       const s = ref.current;
 
-      // input
-      let ax = 0;
-      if (gameInput.left) ax -= MOVE;
-      if (gameInput.right) ax += MOVE;
-      s.vx = ax;
-      if (ax > 0) s.facing = 1;
-      if (ax < 0) s.facing = -1;
-      if (ax === 0) {
+      // ─── horizontal movement (acceleration-based) ───
+      let inputDir = 0;
+      if (gameInput.left) inputDir -= 1;
+      if (gameInput.right) inputDir += 1;
+
+      if (inputDir !== 0) {
+        // accelerate towards input direction
+        s.vx += inputDir * ACCEL * dt;
+        // clamp to max speed
+        if (s.vx > MAX_SPEED) s.vx = MAX_SPEED;
+        if (s.vx < -MAX_SPEED) s.vx = -MAX_SPEED;
+        s.facing = inputDir;
+      } else {
+        // decelerate via friction
         const sign = Math.sign(s.vx);
-        s.vx -= sign * FRICTION * dt;
-        if (Math.sign(s.vx) !== sign) s.vx = 0;
+        if (sign !== 0) {
+          s.vx -= sign * FRICTION * dt;
+          // stop if we cross zero
+          if (Math.sign(s.vx) !== sign) s.vx = 0;
+        }
       }
-      if (gameInput.jump && s.onGround) {
+
+      // ─── coyote time & jump buffer ───
+      if (s.onGround) {
+        s.coyoteTimer = COYOTE_FRAMES;
+      } else {
+        if (s.coyoteTimer > 0) s.coyoteTimer--;
+      }
+      if (s.jumpBuffer > 0) s.jumpBuffer--;
+
+      // ─── jump ───
+      const canJump = s.coyoteTimer > 0;
+      const wantsJump = (gameInput.jump && !s.jumpConsumed) || s.jumpBuffer > 0;
+      if (wantsJump && canJump) {
         s.vy = -JUMP;
         s.onGround = false;
+        s.jumpConsumed = true;
+        s.coyoteTimer = 0;
+        s.jumpBuffer = 0;
       }
-      // gravity
+
+      // variable jump height: cut velocity when key released mid-jump
+      if (!gameInput.jump && s.vy < -JUMP * 0.4) {
+        s.vy = -JUMP * 0.4;
+      }
+
+      // ─── gravity ───
       s.vy += GRAVITY * dt;
       if (s.vy > 1200) s.vy = 1200;
 
-      // candidate move
+      // ─── candidate move ───
       const nextX = s.x + s.vx * dt;
       let nextY = s.y + s.vy * dt;
 
-      // simple ground collision: snap when feet enter platform top from above
+      // ─── platform collision (top only, one-way) ───
       let onGround = false;
       const feetPrev = s.y + H;
       const feetNext = nextY + H;
@@ -348,7 +436,8 @@ function MiniGame() {
       for (const p of platformsRef.current) {
         if (cx2 < p.x || cx1 > p.x + p.w) continue;
         const top = p.y;
-        if (s.vy >= 0 && feetPrev <= top + 4 && feetNext >= top) {
+        // increased tolerance (8px) so fast falls don't tunnel through
+        if (s.vy >= 0 && feetPrev <= top + 8 && feetNext >= top) {
           nextY = top - H;
           s.vy = 0;
           onGround = true;
@@ -359,44 +448,123 @@ function MiniGame() {
       s.x = nextX;
       s.y = nextY;
 
-      // wrap horizontally if off-page
-      const docW = document.documentElement.scrollWidth;
-      if (s.x < -W) s.x = docW;
-      if (s.x > docW) s.x = -W;
+      // wrap horizontally across viewport (exit one side, enter the other)
+      const vpLeft = window.scrollX;
+      const vpRight = window.scrollX + window.innerWidth;
+      if (s.x + W < vpLeft) s.x = vpRight;
+      if (s.x > vpRight) s.x = vpLeft - W + 2;
 
-      // fall off → respawn
-      if (s.y > document.documentElement.scrollHeight + 200) {
-        s.x = window.scrollX + window.innerWidth / 2 - 12;
-        s.y = window.scrollY + 80;
-        s.vy = 0;
+      // invisible ceiling at top of page
+      if (s.y < 0) {
+        s.y = 0;
+        if (s.vy < 0) s.vy = 0;
       }
 
-      setPos({ x: s.x, y: s.y, facing: s.facing });
+      // invisible floor at bottom of page
+      const docBottom = document.documentElement.scrollHeight - H;
+      if (s.y > docBottom) {
+        s.y = docBottom;
+        s.vy = 0;
+        s.onGround = true;
+      }
+
+      setPos({
+        x: s.x, y: s.y, facing: s.facing,
+        moving: Math.abs(s.vx) > 20,
+        onGround: s.onGround,
+      });
       tickerRef.current = requestAnimationFrame(step);
     };
     tickerRef.current = requestAnimationFrame(step);
     return () => cancelAnimationFrame(tickerRef.current);
   }, [playing]);
 
+  const isRunning = pos.moving && pos.onGround;
+  const [stars, setStars] = useState([]);
+  const [showBubble, setShowBubble] = useState(false);
+
+  // dismiss bubble on first movement input
+  useEffect(() => {
+    if (!showBubble) return;
+    const dismiss = (key) => {
+      if (key === 'left' || key === 'right' || key === 'jump') {
+        setShowBubble(false);
+      }
+    };
+    inputListeners.add(dismiss);
+    return () => inputListeners.delete(dismiss);
+  }, [showBubble]);
+
+  // spawn star particles when play starts
+  const spawnStars = useCallback(() => {
+    const playBtn = document.querySelector('.play-toggle');
+    if (!playBtn) return;
+    const r = playBtn.getBoundingClientRect();
+    const cx = r.left + r.width / 2;
+    const cy = r.top + r.height / 2;
+    const newStars = Array.from({ length: 12 }, (_, i) => {
+      const angle = (Math.PI * 2 * i) / 12 + (Math.random() - 0.5) * 0.5;
+      const speed = 60 + Math.random() * 100;
+      const size = 6 + Math.random() * 10;
+      return {
+        id: Date.now() + i,
+        x: cx, y: cy,
+        dx: Math.cos(angle) * speed,
+        dy: Math.sin(angle) * speed - 40,
+        size,
+        hue: [340, 50, 180, 280][i % 4],
+      };
+    });
+    setStars(newStars);
+    setTimeout(() => setStars([]), 800);
+  }, []);
+
   return (
     <>
       <button
         className="play-toggle"
-        onClick={() => setPlaying((p) => !p)}
+        onClick={() => {
+          setPlaying((p) => {
+            if (!p) {
+              setTimeout(spawnStars, 10);
+              setShowBubble(true);
+            } else {
+              setShowBubble(false);
+            }
+            return !p;
+          });
+        }}
         title="Toggle minigame (P)"
       >
         {playing ? '■ STOP' : '▶ PLAY'}
       </button>
+      {stars.map((s) => (
+        <span
+          key={s.id}
+          className="play-star-particle"
+          style={{
+            left: s.x + 'px',
+            top: s.y + 'px',
+            '--dx': s.dx + 'px',
+            '--dy': s.dy + 'px',
+            '--size': s.size + 'px',
+            '--hue': s.hue,
+          }}
+        >★</span>
+      ))}
       {playing && (
         <>
           <div
-            className="player"
+            className={`player${isRunning ? ' running' : ''}${!pos.onGround ? ' airborne' : ''}`}
             style={{
               left: pos.x + 'px',
               top: pos.y + 'px',
               transform: `scaleX(${pos.facing})`,
             }}
           >
+            {showBubble && (
+              <div className="player-bubble">Hi, I'm Bibidy!</div>
+            )}
             <div className="player-body">
               <div className="player-eye l" />
               <div className="player-eye r" />
