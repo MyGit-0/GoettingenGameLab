@@ -4,22 +4,59 @@ const { useState, useEffect, useRef, useCallback } = React;
 const WORKSHOPS = [
   {
     num: "01",
-    title: "Careers, Roles & Entry Paths",
-    desc: "What studios actually look for. Roles, entry paths, portfolio types — straight from people who hire.",
-    output: "Clearer next steps for your portfolio",
+    title: "Intro to Game Industry",
+    desc: "Meet the Göttingen Game Lab, understand career paths/roles in the games industry, and get motivated to build your own project.",
+    output: "Roadmap to industry paths & Göttingen Game Lab connection",
+    goals: [
+      "Introduce Göttingen Game Lab",
+      "Introduce the game industry and career paths",
+      "Motivate students to join Workshop 2 and the Game Jam",
+      "Include an on-site speaker if possible"
+    ],
+    todo: [
+      "What Göttingen Game Lab is and our resources",
+      "Game industry roles (design, code, art, sound, PM)",
+      "Career paths, funding & opportunities",
+      "Why interdisciplinary students are highly welcome",
+      "Next steps: Workshop 2 and the Game Jam"
+    ]
   },
   {
     num: "02",
-    title: "Rapid Prototyping with Accessible Tools",
-    desc: "Idea → playable thing, fast. Beginner-friendly tools, templates and AI-assisted workflows.",
-    output: "Your first prototype",
+    title: "Team Forming, Design Thinking, Tools, Production",
+    desc: "Form your dream team, learn game design thinking methodologies, and get introduced to game production tools (engines, Kanban boards, lightweight Scrum scope control).",
+    output: "Formed team, Kanban board & project scope plan",
+    goals: [
+      "Form collaborative game teams",
+      "Introduce game design thinking methodology",
+      "Introduce tools used in game production",
+      "Introduce Scrum & lightweight project methodology",
+      "Include online speaker / producer if possible"
+    ],
+    todo: [
+      "Prepare team forming / ice-breaker activity",
+      "Design thinking & game design methodology",
+      "Prototyping tools (engines, boards, asset/audio)",
+      "Lightweight Scrum/Kanban roles and tasks setup",
+      "Contact Filip (Producer) for guest session"
+    ]
   },
   {
     num: "03",
-    title: "Building & Managing a Game Team",
-    desc: "Coordination, communication, scope. Lightweight Kanban / Agile / Scrum for tiny indie teams.",
-    output: "A team plan you can actually run",
-  },
+    title: "Game Jam and Award",
+    desc: "The final 48-hour challenge. Teams pitch, build, and present a small game. A mentor team will support you throughout, culminating in a showcase and awards.",
+    output: "A playable game prototype & Gamescom ticket award entry",
+    goals: [
+      "Teams build a small game/prototype in 48 hours",
+      "Teams present their work in a public showcase",
+      "Award winning team (Gamescom tickets!)"
+    ],
+    todo: [
+      "Define Game Jam format, duration & rules",
+      "Set submission requirements & judging criteria",
+      "Schedule mentor checkpoints & award ceremony"
+    ]
+  }
 ];
 
 const SPEAKERS = [
@@ -32,7 +69,7 @@ const SPEAKERS = [
 ];
 
 const FAQS = [
-  { q: "Do I need any coding experience?", a: "No. Game Lab is beginner-friendly. Contribute through writing, art, sound, design, production, communication, or programming." },
+  { q: "Do I need any coding experience?", a: "No. Göttingen Game Studio is beginner-friendly. Contribute through writing, art, sound, design, production, communication, or programming." },
   { q: "Who is this for?", a: "Any student at the University of Göttingen — any degree, any year, any background." },
   { q: "Do I have to attend everything?", a: "No. Pick the parts that interest you. Materials will be on Stud.IP / eCampus afterwards." },
   { q: "What is the 48-hour challenge?", a: "A short collaborative game-jam at the end. Teams ship a small playable game, with mentor checkpoints and a public showcase." },
@@ -72,7 +109,7 @@ function Nav() {
       <div className="shell nav-inner">
         <a href="#top" className="logo">
           <span className="logo-mark">G</span>
-          <span>GAME LAB</span>
+          <span>GAME STUDIO</span>
         </a>
         <div className="nav-links">
           <a href="#about">about</a>
@@ -95,6 +132,30 @@ function Gamepad() {
   const [pressed, setPressed] = useState({});
   const [stick, setStick] = useState({ x: 0, y: 0 });
   const [dpad, setDpad] = useState({ up: false, down: false, left: false, right: false });
+  const [isFloating, setIsFloating] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Scroll listener to activate bottom docked gamepad overlay on mobile
+  useEffect(() => {
+    const handleCheck = () => {
+      const mobile = window.innerWidth <= 900;
+      setIsMobile(mobile);
+      if (mobile && window.scrollY > 350) {
+        setIsFloating(true);
+      } else {
+        setIsFloating(false);
+        setMobileOpen(false);
+      }
+    };
+    window.addEventListener('scroll', handleCheck, { passive: true });
+    window.addEventListener('resize', handleCheck);
+    handleCheck();
+    return () => {
+      window.removeEventListener('scroll', handleCheck);
+      window.removeEventListener('resize', handleCheck);
+    };
+  }, []);
 
   // mouse-tracked sticks
   useEffect(() => {
@@ -193,51 +254,79 @@ function Gamepad() {
 
   const dpadAny = dpad.up || dpad.down || dpad.left || dpad.right;
 
+  const wrapClass = [
+    "gamepad-wrap",
+    isFloating ? "floating-mobile" : "",
+    mobileOpen ? "mobile-open" : ""
+  ].filter(Boolean).join(" ");
+
   return (
-    <div className="gamepad-wrap" ref={wrapRef}>
-      <div className="gamepad">
-        <div className="gp-shoulder l"><span>LB</span></div>
-        <div className="gp-shoulder r"><span>RB</span></div>
-        <div className="gp-trigger l" />
-        <div className="gp-trigger r" />
-        <div className="gp-grip l" />
-        <div className="gp-grip r" />
-        <div className="gp-body">
-          <div className="gp-gloss" />
-          <div className="gp-screen">
-            <div className="gp-screen-inner">
-              <span className="gp-screen-pixel" />
-              <span className="gp-screen-pixel" />
-              <span className="gp-screen-pixel" />
+    <>
+      <div className={wrapClass} ref={wrapRef}>
+        <div className="gamepad">
+          {isFloating && (
+            <button 
+              className="gp-mobile-close" 
+              onClick={() => setMobileOpen(false)}
+              aria-label="Close controls"
+            >
+              ✕
+            </button>
+          )}
+          <div className="gp-shoulder l"><span>LB</span></div>
+          <div className="gp-shoulder r"><span>RB</span></div>
+          <div className="gp-trigger l" />
+          <div className="gp-trigger r" />
+          <div className="gp-grip l" />
+          <div className="gp-grip r" />
+          <div className="gp-body">
+            <div className="gp-gloss" />
+            <div className="gp-screen">
+              <div className="gp-screen-inner">
+                <span className="gp-screen-pixel" />
+                <span className="gp-screen-pixel" />
+                <span className="gp-screen-pixel" />
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className={`gp-dpad ${dpadAny ? 'active' : ''}`}>
-          <div className={`gp-dpad-arm v ${dpad.up ? 'pressed' : ''}`} {...dpadHandlers('up')} />
-          <div className={`gp-dpad-arm v down ${dpad.down ? 'pressed' : ''}`} {...dpadHandlers('down')} />
-          <div className={`gp-dpad-arm h ${dpad.left ? 'pressed' : ''}`} {...dpadHandlers('left')} />
-          <div className={`gp-dpad-arm h right ${dpad.right ? 'pressed' : ''}`} {...dpadHandlers('right')} />
-          <div className="gp-dpad-center" />
-        </div>
+          <div className={`gp-dpad ${dpadAny ? 'active' : ''}`}>
+            <div className={`gp-dpad-arm v ${dpad.up ? 'pressed' : ''}`} {...dpadHandlers('up')} />
+            <div className={`gp-dpad-arm v down ${dpad.down ? 'pressed' : ''}`} {...dpadHandlers('down')} />
+            <div className={`gp-dpad-arm h ${dpad.left ? 'pressed' : ''}`} {...dpadHandlers('left')} />
+            <div className={`gp-dpad-arm h right ${dpad.right ? 'pressed' : ''}`} {...dpadHandlers('right')} />
+            <div className="gp-dpad-center" />
+          </div>
 
-        <div className="gp-center" />
+          <div className="gp-center" />
 
-        <div className="gp-face">
-          <div className={`gp-btn b1 ${pressed.b1 ? 'pressed' : ''}`} {...btnHandlers('b1')}><span>A</span></div>
-          <div className={`gp-btn b2 ${pressed.b2 ? 'pressed' : ''}`} {...btnHandlers('b2')}><span>B</span></div>
-          <div className={`gp-btn b3 ${pressed.b3 ? 'pressed' : ''}`} {...btnHandlers('b3')}><span>X</span></div>
-          <div className={`gp-btn b4 ${pressed.b4 ? 'pressed' : ''}`} {...btnHandlers('b4')}><span>Y</span></div>
-        </div>
+          <div className="gp-face">
+            <div className={`gp-btn b1 ${pressed.b1 ? 'pressed' : ''}`} {...btnHandlers('b1')}><span>W</span></div>
+            <div className={`gp-btn b2 ${pressed.b2 ? 'pressed' : ''}`} {...btnHandlers('b2')}><span>D</span></div>
+            <div className={`gp-btn b3 ${pressed.b3 ? 'pressed' : ''}`} {...btnHandlers('b3')}><span>S</span></div>
+            <div className={`gp-btn b4 ${pressed.b4 ? 'pressed' : ''}`} {...btnHandlers('b4')}><span>A</span></div>
+          </div>
 
-        <div className="gp-stick l">
-          <div className="gp-stick-knob" style={knobStyle()} />
-        </div>
-        <div className="gp-stick r">
-          <div className="gp-stick-knob" style={knobStyle()} />
+          <div className="gp-stick l">
+            <div className="gp-stick-knob" style={knobStyle()} />
+          </div>
+          <div className="gp-stick r">
+            <div className="gp-stick-knob" style={knobStyle()} />
+          </div>
         </div>
       </div>
-    </div>
+
+      {isFloating && (
+        <button 
+          className={`gp-mobile-fab ${mobileOpen ? 'active' : ''}`}
+          onClick={() => setMobileOpen(!mobileOpen)}
+          aria-label="Toggle gamepad controls"
+        >
+          <span className="fab-icon">🎮</span>
+          <span className="fab-text">{mobileOpen ? "HIDE CONTROLS" : "CONTROLS"}</span>
+        </button>
+      )}
+    </>
   );
 }
 
@@ -592,9 +681,9 @@ function Hero({ layout }) {
         <div className="hero-copy reveal">
           <span className="kicker"><span className="dot" /> JULY 2026 · GÖTTINGEN</span>
           <h1 className="hero-title">
-            <span aria-hidden="true" className="echo echo-2">GAME LAB</span>
-            <span aria-hidden="true" className="echo">GAME LAB</span>
-            GAME LAB
+            <span aria-hidden="true" className="echo echo-2">GAME STUDIO</span>
+            <span aria-hidden="true" className="echo">GAME STUDIO</span>
+            GAME STUDIO
           </h1>
           <p className="hero-sub">
             Workshops. Industry talks. A 48-hour game jam.<br/>
@@ -705,29 +794,28 @@ function Workshops() {
           ))}
         </div>
         <div className="workshop-body">
-          <div className="reveal" key={'l' + tab}>
+          <div className="workshop-pane" key={'l' + tab}>
             <div className="workshop-num">W{w.num}</div>
             <h3 className="workshop-title">{w.title}</h3>
             <p className="workshop-desc">{w.desc}</p>
             <span className="workshop-output">↳ {w.output}</span>
           </div>
-          <div className="reveal" key={'r' + tab}>
-            <span className="tentative">// GUEST SPEAKERS · TBD</span>
-            <div className="speakers-mini">
-              <div className="speaker-mini">
-                <div className="speaker-avatar">?</div>
-                <div>
-                  <div className="speaker-name">TBD</div>
-                  <div className="speaker-role">Industry guest · to be announced</div>
-                </div>
-              </div>
-              <div className="speaker-mini">
-                <div className="speaker-avatar">?</div>
-                <div>
-                  <div className="speaker-name">TBD</div>
-                  <div className="speaker-role">Industry guest · to be announced</div>
-                </div>
-              </div>
+          <div className="workshop-pane-right" key={'r' + tab}>
+            <div className="ws-section-meta">
+              <h4>🎯 MAIN GOALS</h4>
+              <ul className="ws-goals-list">
+                {w.goals.map((g, i) => (
+                  <li key={i}><span className="ws-bullet">✦</span> {g}</li>
+                ))}
+              </ul>
+            </div>
+            <div className="ws-section-meta" style={{ marginTop: '20px' }}>
+              <h4>📋 CONTENT & TODO</h4>
+              <ul className="ws-todo-list">
+                {w.todo.map((t, i) => (
+                  <li key={i}><span className="ws-checkbox">☐</span> {t}</li>
+                ))}
+              </ul>
             </div>
           </div>
         </div>
@@ -947,7 +1035,7 @@ function Apply({ formUrl }) {
           <div className="apply-frame-screen">
             <iframe
               src={formUrl + (formUrl.includes('?') ? '&' : '?') + 'embedded=true'}
-              title="Game Lab registration form"
+              title="Göttingen Game Studio registration form"
               className="apply-iframe"
               loading="lazy"
             >
@@ -961,7 +1049,232 @@ function Apply({ formUrl }) {
 }
 
 // ============= FOOTER =============
-function Footer() {
+function Imprint() {
+  return (
+    <section className="imprint-section" id="imprint">
+      <div className="shell imprint-grid">
+        <div>
+          <span className="eyebrow"><span className="bar"/> IMPRINT</span>
+          <h2 className="section-title">Provider information.</h2>
+        </div>
+        <div className="imprint-panel">
+          <h3>Information pursuant to Section 5 DDG</h3>
+          <p>
+            Nhu Trieu Minh Tran<br/>
+            Geismar Landstraße 11<br/>
+            37083 Göttingen<br/>
+            Germany
+          </p>
+          <h3>Contact</h3>
+          <p>
+            Email: <a href="mailto:admin@goegame.de">admin@goegame.de</a>
+          </p>
+          <h3>Responsible for content</h3>
+          <p>Nhu Trieu Minh Tran</p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ============= PRIVACY POLICY CONTENT (shared) =============
+function PrivacyContent() {
+  return (
+    <>
+      <h3>1. Verantwortlicher</h3>
+      <p>
+        Verantwortlich für die Datenverarbeitung auf dieser Website ist:<br/>
+        Nhu Trieu Minh Tran<br/>
+        Geismar Landstraße 11<br/>
+        37083 Göttingen<br/>
+        Deutschland<br/>
+        E-Mail: <a href="mailto:admin@goegame.de">admin@goegame.de</a>
+      </p>
+
+      <h3>2. Allgemeine Hinweise</h3>
+      <p>
+        Wir verarbeiten personenbezogene Daten nur, soweit dies zur Bereitstellung dieser Website,
+        zur Bearbeitung von Anfragen oder zur Organisation des Göttingen Game Studio erforderlich ist. Personenbezogene
+        Daten sind alle Informationen, mit denen eine Person direkt oder indirekt identifiziert werden kann.
+      </p>
+
+      <h3>3. Hosting und Server-Logfiles</h3>
+      <p>
+        Diese Website wird bei Netlify gehostet. Beim Aufruf der Website können technisch notwendige
+        Zugriffsdaten verarbeitet werden, insbesondere IP-Adresse, Datum und Uhrzeit des Zugriffs,
+        aufgerufene Dateien, Referrer-URL, Browsertyp, Betriebssystem und ähnliche technische Daten.
+        Die Verarbeitung erfolgt zur sicheren und stabilen Bereitstellung der Website auf Grundlage von
+        Art. 6 Abs. 1 lit. f DSGVO. Unser berechtigtes Interesse liegt im sicheren Betrieb und in der
+        Fehleranalyse dieser Website.
+      </p>
+      <p>
+        Anbieter ist Netlify, Inc., 44 Montgomery Street, Suite 300, San Francisco, CA 94104, USA.
+        Es kann zu einer Verarbeitung von Daten außerhalb der EU kommen. Netlify gibt an, geeignete
+        Schutzmechanismen, insbesondere Standardvertragsklauseln, einzusetzen.
+      </p>
+
+      <h3>4. Anmeldung über Google Forms</h3>
+      <p>
+        Für die Anmeldung oder Interessensbekundung nutzen wir ein eingebettetes Google Formular.
+        Wenn Sie das Formular öffnen oder absenden, werden die im Formular abgefragten Angaben sowie
+        technische Zugriffsdaten an Google übermittelt und dort verarbeitet. Je nach Formular können
+        dies insbesondere Name, E-Mail-Adresse, Studienbezug, organisatorische Angaben und freie
+        Nachrichtentexte sein.
+      </p>
+      <p>
+        Die Verarbeitung erfolgt zur Organisation, Planung und Durchführung des Göttingen Game Studio. Rechtsgrundlage
+        ist Art. 6 Abs. 1 lit. b DSGVO, soweit die Verarbeitung zur Anmeldung oder Teilnahme erforderlich
+        ist, sowie Art. 6 Abs. 1 lit. f DSGVO für die organisatorische Planung. Optional angegebene Daten
+        verarbeiten wir auf Grundlage Ihrer Einwilligung nach Art. 6 Abs. 1 lit. a DSGVO.
+      </p>
+      <p>
+        Anbieter ist Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irland. Google kann
+        Daten auch in die USA und andere Drittländer übermitteln. Weitere Informationen finden Sie in
+        der Datenschutzerklärung von Google: <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">https://policies.google.com/privacy</a>.
+      </p>
+
+      <h3>5. Kontakt per E-Mail</h3>
+      <p>
+        Wenn Sie uns per E-Mail kontaktieren, verarbeiten wir Ihre E-Mail-Adresse, Ihre Nachricht und
+        die damit verbundenen technischen Metadaten, um Ihre Anfrage zu beantworten. Rechtsgrundlage ist
+        Art. 6 Abs. 1 lit. f DSGVO. Wenn Ihre Anfrage auf eine Anmeldung oder Teilnahme gerichtet ist,
+        kann zusätzlich Art. 6 Abs. 1 lit. b DSGVO einschlägig sein.
+      </p>
+
+      <h3>6. Externe Schriftarten und Skripte</h3>
+      <p>
+        Diese Website lädt Schriftarten von Google Fonts sowie JavaScript-Bibliotheken über unpkg.com.
+        Beim Laden dieser Ressourcen können technische Daten, insbesondere Ihre IP-Adresse und Browserdaten,
+        an die jeweiligen Anbieter übermittelt werden. Die Einbindung erfolgt auf Grundlage von Art. 6
+        Abs. 1 lit. f DSGVO. Unser berechtigtes Interesse liegt in einer stabilen, lesbaren und funktionsfähigen
+        Darstellung der Website.
+      </p>
+
+      <h3>7. Cookies und Tracking</h3>
+      <p>
+        Wir setzen keine eigenen Analyse- oder Marketing-Cookies ein. Durch eingebettete Drittanbieter,
+        insbesondere Google Forms, können jedoch Cookies oder ähnliche Technologien von Google gesetzt
+        werden, sobald diese Inhalte geladen oder genutzt werden.
+      </p>
+
+      <h3>8. Speicherdauer</h3>
+      <p>
+        Wir speichern personenbezogene Daten nur so lange, wie dies für die genannten Zwecke erforderlich
+        ist. Anmeldedaten werden grundsätzlich nach Abschluss der Veranstaltung und der notwendigen
+        Nachbereitung gelöscht, sofern keine gesetzlichen Aufbewahrungspflichten oder berechtigten Gründe
+        für eine längere Speicherung bestehen.
+      </p>
+
+      <h3>9. Ihre Rechte</h3>
+      <p>
+        Sie haben nach Maßgabe der DSGVO das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung
+        der Verarbeitung, Datenübertragbarkeit sowie Widerspruch gegen bestimmte Verarbeitungen. Soweit
+        eine Verarbeitung auf Einwilligung beruht, können Sie diese Einwilligung jederzeit mit Wirkung
+        für die Zukunft widerrufen.
+      </p>
+      <p>
+        Sie haben außerdem das Recht, sich bei einer Datenschutzaufsichtsbehörde zu beschweren. Zuständig
+        kann insbesondere die Landesbeauftragte für den Datenschutz Niedersachsen sein.
+      </p>
+
+      <h3>10. Änderungen</h3>
+      <p>
+        Wir können diese Datenschutzerklärung anpassen, wenn sich technische, organisatorische oder
+        rechtliche Anforderungen ändern.
+      </p>
+    </>
+  );
+}
+
+// ============= PRIVACY MODAL =============
+function PrivacyModal({ open, onClose }) {
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  return (
+    <div className="privacy-overlay" onClick={onClose}>
+      <div className="privacy-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="privacy-modal-bar">
+          <span className="privacy-modal-dot d1" />
+          <span className="privacy-modal-dot d2" />
+          <span className="privacy-modal-dot d3" />
+          <span className="privacy-modal-title">DATENSCHUTZ.exe</span>
+          <button className="privacy-modal-close" onClick={onClose} aria-label="Close">✕</button>
+        </div>
+        <div className="privacy-modal-body">
+          <div className="privacy-modal-header">
+            <span className="eyebrow"><span className="bar"/> DATENSCHUTZ</span>
+            <h2 className="privacy-modal-heading">Datenschutzerklärung</h2>
+            <span className="privacy-modal-date">Stand: Mai 2026</span>
+          </div>
+          <div className="privacy-panel">
+            <PrivacyContent />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============= COOKIE CONSENT BANNER =============
+function CookieConsent({ onOpenPrivacy }) {
+  const [visible, setVisible] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
+
+  useEffect(() => {
+    try {
+      if (localStorage.getItem('gg_cookie_consent') === 'accepted') {
+        setDismissed(true);
+        return;
+      }
+    } catch (_) { /* localStorage unavailable */ }
+    // slight delay so it slides in after page load
+    const timer = setTimeout(() => setVisible(true), 1200);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleAccept = () => {
+    setVisible(false);
+    try { localStorage.setItem('gg_cookie_consent', 'accepted'); } catch (_) {}
+    setTimeout(() => setDismissed(true), 500);
+  };
+
+  if (dismissed) return null;
+
+  return (
+    <div className={`consent-banner ${visible ? 'consent-visible' : ''}`}>
+      <div className="consent-inner">
+        <div className="consent-icon">🛡️</div>
+        <div className="consent-text">
+          <strong>Datenschutz & Cookies</strong>
+          <p>
+            Diese Website verwendet keine eigenen Tracking-Cookies. Eingebettete Drittanbieter
+            (Google Forms) können Cookies setzen.{' '}
+            <button className="consent-link" onClick={onOpenPrivacy}>Datenschutzerklärung lesen →</button>
+          </p>
+        </div>
+        <button className="consent-accept" onClick={handleAccept}>AKZEPTIEREN</button>
+      </div>
+    </div>
+  );
+}
+
+function Footer({ onOpenPrivacy }) {
   return (
     <footer className="footer">
       <div className="shell">
@@ -969,7 +1282,7 @@ function Footer() {
           <div className="footer-brand">
             <a href="#top" className="logo">
               <span className="logo-mark">G</span>
-              <span>GAME LAB</span>
+              <span>GAME STUDIO</span>
             </a>
             <p>
               A program by the University of Göttingen, supported by IMPACT! Studieren mit Wirkung.
@@ -992,11 +1305,16 @@ function Footer() {
             <h5>CONNECT</h5>
             <a href="#">Discord</a>
             <a href="#">Stud.IP</a>
-            <a href="#">Email</a>
+            <a href="mailto:admin@goegame.de">Email</a>
+          </div>
+          <div className="footer-col">
+            <h5>LEGAL</h5>
+            <a href="#imprint">Imprint</a>
+            <button className="footer-privacy-btn" onClick={onOpenPrivacy}>Datenschutz</button>
           </div>
         </div>
         <div className="footer-bot">
-          <div>© 2026 Student Game Lab · Uni Göttingen</div>
+          <div>© 2026 Student Game Studio · Uni Göttingen</div>
           <div className="partners">
             <span className="partner-logo">[ Georg-August-Universität ]</span>
             <span className="partner-logo">[ IMPACT! ]</span>
@@ -1018,6 +1336,9 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
 
 function App() {
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const [privacyOpen, setPrivacyOpen] = useState(false);
+  const openPrivacy = useCallback(() => setPrivacyOpen(true), []);
+  const closePrivacy = useCallback(() => setPrivacyOpen(false), []);
   useReveal();
 
   useEffect(() => {
@@ -1040,8 +1361,11 @@ function App() {
       <Speakers />
       <FAQ />
       <Apply formUrl={FORM_URL} />
-      <Footer />
+      <Imprint />
+      <Footer onOpenPrivacy={openPrivacy} />
       <MiniGame />
+      <CookieConsent onOpenPrivacy={openPrivacy} />
+      <PrivacyModal open={privacyOpen} onClose={closePrivacy} />
       <TweaksPanel title="Tweaks">
         <TweakSection title="Color theme">
           <TweakRadio
