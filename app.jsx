@@ -127,7 +127,7 @@ function Nav() {
 }
 
 // ============= GAMEPAD =============
-function Gamepad() {
+function Gamepad({ variant = "inline" }) {
   const wrapRef = useRef(null);
   const [pressed, setPressed] = useState({});
   const [stick, setStick] = useState({ x: 0, y: 0 });
@@ -136,26 +136,24 @@ function Gamepad() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Scroll listener to activate bottom docked gamepad overlay on mobile
+  // Resize listener to activate gamepad overlay on mobile for the floating variant
   useEffect(() => {
     const handleCheck = () => {
       const mobile = window.innerWidth <= 900;
       setIsMobile(mobile);
-      if (mobile && window.scrollY > 350) {
-        setIsFloating(true);
+      if (variant === 'floating') {
+        setIsFloating(mobile);
       } else {
         setIsFloating(false);
         setMobileOpen(false);
       }
     };
-    window.addEventListener('scroll', handleCheck, { passive: true });
     window.addEventListener('resize', handleCheck);
     handleCheck();
     return () => {
-      window.removeEventListener('scroll', handleCheck);
       window.removeEventListener('resize', handleCheck);
     };
-  }, []);
+  }, [variant]);
 
   // mouse-tracked sticks
   useEffect(() => {
@@ -259,6 +257,8 @@ function Gamepad() {
     isFloating ? "floating-mobile" : "",
     mobileOpen ? "mobile-open" : ""
   ].filter(Boolean).join(" ");
+
+  if (variant === 'floating' && !isMobile) return null;
 
   return (
     <>
@@ -1364,6 +1364,7 @@ function App() {
       <Imprint />
       <Footer onOpenPrivacy={openPrivacy} />
       <MiniGame />
+      <Gamepad variant="floating" />
       <CookieConsent onOpenPrivacy={openPrivacy} />
       <PrivacyModal open={privacyOpen} onClose={closePrivacy} />
       <TweaksPanel title="Tweaks">
