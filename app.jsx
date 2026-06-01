@@ -60,12 +60,30 @@ const WORKSHOPS = [
 ];
 
 const SPEAKERS = [
-  { initials: "TBD", role: "Senior Producer · careers, teams & production", w: "01" },
-  { initials: "TBD", role: "HR Generalist · hiring & application flow", w: "01" },
-  { initials: "TBD", role: "Senior Game Designer · rapid prototyping", w: "02" },
-  { initials: "TBD", role: "Gameplay & Game-AI Programmer", w: "02" },
-  { initials: "TBD", role: "Indie writer / dev · leading small teams", w: "03" },
-  { initials: "TBD", role: "Producer · production, design, music", w: "03" },
+  {
+    name: "Filip Cholewczyński",
+    role: "Senior Game Producer",
+    company: "CD Projekt RED · 11 bit studios · Ubisoft · Wooga",
+    bio: "15+ years across Europe's top studios. Credits include GWENT, Thronebreaker, Frostpunk, Skull & Bones, and June's Journey. Now building a coaching & consulting practice for the games industry.",
+    photo: "speakers/Filip Cholewczynski_Gottingen Game Studio.png",
+    linkedin: "https://www.linkedin.com/in/cholewczynski/",
+    w: "01",
+    confirmed: true
+  },
+  {
+    name: "Cyrus Nemati",
+    role: "Writer, Voice Actor & Indie Dev",
+    company: "Little Bat Games · Supergiant Games",
+    bio: "BAFTA-nominated writer and voice actor. Known for Vampire Therapist, and voicing Ares, Dionysus & Theseus in the Hades games. Founder of Little Bat Games.",
+    photo: "speakers/cyrus.jpeg",
+    linkedin: "https://www.linkedin.com/in/cyrus-nemati/",
+    w: "02",
+    confirmed: true
+  },
+  { name: "TBD", role: "HR Generalist · hiring & application flow", w: "01", confirmed: false },
+  { name: "TBD", role: "Gameplay & Game-AI Programmer", w: "02", confirmed: false },
+  { name: "TBD", role: "Indie writer / dev · leading small teams", w: "03", confirmed: false },
+  { name: "TBD", role: "Producer · production, design, music", w: "03", confirmed: false },
 ];
 
 const FAQS = [
@@ -681,8 +699,9 @@ function Hero({ layout }) {
         <div className="hero-copy reveal">
           <span className="kicker"><span className="dot" /> JULY 2026 · GÖTTINGEN</span>
           <h1 className="hero-title">
-            <span aria-hidden="true" className="echo echo-2">GAME STUDIO</span>
-            <span aria-hidden="true" className="echo">GAME STUDIO</span>
+            <span aria-hidden="true" className="echo echo-2"><span className="hero-title-top">GÖTTINGEN</span>GAME STUDIO</span>
+            <span aria-hidden="true" className="echo"><span className="hero-title-top">GÖTTINGEN</span>GAME STUDIO</span>
+            <span className="hero-title-top">GÖTTINGEN</span>
             GAME STUDIO
           </h1>
           <p className="hero-sub">
@@ -936,24 +955,57 @@ function Prize() {
 
 // ============= SPEAKERS GRID =============
 function Speakers() {
+  const confirmed = SPEAKERS.filter(s => s.confirmed);
+  const tbd = SPEAKERS.filter(s => !s.confirmed);
   return (
     <section className="section dark" id="speakers">
       <div className="shell">
         <div className="reveal">
           <span className="eyebrow"><span className="bar"/> GUEST SPEAKERS</span>
-          <h2 className="section-title">Lineup dropping soon.</h2>
-          <span className="tentative">// LINEUP IN PROGRESS · ALL SPEAKERS TBD</span>
+          <h2 className="section-title">Industry voices. Real experience.</h2>
         </div>
-        <div className="speakers reveal">
-          {SPEAKERS.map((s, i) => (
-            <div className="sp-card" key={i}>
-              <div className="sp-portrait">?</div>
-              <div className="sp-name">TBD</div>
-              <div className="sp-title">{s.role}</div>
-              <span className="sp-pill">W{s.w}</span>
+
+        {/* Confirmed speakers — featured cards */}
+        <div className="speakers-featured reveal">
+          {confirmed.map((s, i) => (
+            <div className="sp-featured-card" key={i}>
+              <div className="sp-featured-photo">
+                <img src={s.photo} alt={s.name} loading="lazy" />
+              </div>
+              <div className="sp-featured-info">
+                <div className="sp-featured-header">
+                  <h3 className="sp-featured-name">{s.name}</h3>
+                  <span className="sp-pill">W{s.w}</span>
+                </div>
+                <div className="sp-featured-role">{s.role}</div>
+                <div className="sp-featured-company">{s.company}</div>
+                <p className="sp-featured-bio">{s.bio}</p>
+                {s.linkedin && (
+                  <a href={s.linkedin} target="_blank" rel="noopener" className="sp-linkedin">
+                    LinkedIn →
+                  </a>
+                )}
+              </div>
             </div>
           ))}
         </div>
+
+        {/* TBD speakers */}
+        {tbd.length > 0 && (
+          <div className="reveal" style={{ marginTop: '40px' }}>
+            <span className="tentative">// MORE SPEAKERS DROPPING SOON</span>
+            <div className="speakers" style={{ marginTop: '20px' }}>
+              {tbd.map((s, i) => (
+                <div className="sp-card" key={i}>
+                  <div className="sp-portrait">?</div>
+                  <div className="sp-name">TBD</div>
+                  <div className="sp-title">{s.role}</div>
+                  <span className="sp-pill">W{s.w}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );
@@ -1238,7 +1290,8 @@ function CookieConsent({ onOpenPrivacy }) {
 
   useEffect(() => {
     try {
-      if (localStorage.getItem('gg_cookie_consent') === 'accepted') {
+      const consent = localStorage.getItem('gg_cookie_consent');
+      if (consent === 'accepted' || consent === 'rejected') {
         setDismissed(true);
         return;
       }
@@ -1251,6 +1304,12 @@ function CookieConsent({ onOpenPrivacy }) {
   const handleAccept = () => {
     setVisible(false);
     try { localStorage.setItem('gg_cookie_consent', 'accepted'); } catch (_) {}
+    setTimeout(() => setDismissed(true), 500);
+  };
+
+  const handleReject = () => {
+    setVisible(false);
+    try { localStorage.setItem('gg_cookie_consent', 'rejected'); } catch (_) {}
     setTimeout(() => setDismissed(true), 500);
   };
 
@@ -1268,7 +1327,10 @@ function CookieConsent({ onOpenPrivacy }) {
             <button className="consent-link" onClick={onOpenPrivacy}>Datenschutzerklärung lesen →</button>
           </p>
         </div>
-        <button className="consent-accept" onClick={handleAccept}>AKZEPTIEREN</button>
+        <div className="consent-buttons">
+          <button className="consent-reject" onClick={handleReject}>NUR NOTWENDIGE</button>
+          <button className="consent-accept" onClick={handleAccept}>ALLE AKZEPTIEREN</button>
+        </div>
       </div>
     </div>
   );
