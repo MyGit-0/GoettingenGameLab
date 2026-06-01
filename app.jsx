@@ -171,9 +171,10 @@ function Nav() {
         </a>
         <div className="nav-links">
           <a href="#about">about</a>
-          <a href="#workshops">workshops</a>
           <a href="#jam">game jam</a>
-          <a href="#people">people</a>
+          <a href="#speakers">speakers</a>
+          <a href="#workshops">workshops</a>
+          <a href="#team">team</a>
           <a href="#apply">apply</a>
         </div>
         <a className="nav-cta" href="#apply">
@@ -993,32 +994,13 @@ function Prize() {
   );
 }
 
-// ============= PEOPLE (TEAM + SPEAKERS) =============
-function People() {
+// ============= GUEST SPEAKERS =============
+function Speakers() {
   const confirmed = SPEAKERS.filter(s => s.confirmed);
-  const tbd = SPEAKERS.filter(s => !s.confirmed);
-
-  // Generate initials from name for avatar
-  const getInitials = (name) => {
-    return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
-  };
-
-  // Accent colors for team member avatars
-  const teamColors = [
-    'linear-gradient(135deg, var(--magenta), var(--purple))',
-    'linear-gradient(135deg, var(--purple), var(--cyan))',
-    'linear-gradient(135deg, var(--cyan), #4ade80)',
-    'linear-gradient(135deg, #4ade80, var(--yellow))',
-    'linear-gradient(135deg, var(--yellow), var(--magenta))',
-    'linear-gradient(135deg, var(--magenta-2), var(--purple))',
-    'linear-gradient(135deg, var(--cyan), var(--magenta))',
-  ];
 
   return (
-    <section className="section dark" id="people">
+    <section className="section dark" id="speakers">
       <div className="shell">
-
-        {/* ── GUEST SPEAKERS ── */}
         <div className="reveal">
           <span className="eyebrow"><span className="bar"/> GUEST SPEAKERS</span>
           <h2 className="section-title">Industry voices. Real experience.</h2>
@@ -1047,9 +1029,33 @@ function People() {
             </div>
           ))}
         </div>
+      </div>
+    </section>
+  );
+}
 
-        {/* ── THE TEAM ── */}
-        <div className="reveal" style={{ marginTop: '80px' }}>
+// ============= OUR TEAM =============
+function Team() {
+  // Generate initials from name for avatar
+  const getInitials = (name) => {
+    return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  };
+
+  // Accent colors for team member avatars
+  const teamColors = [
+    'linear-gradient(135deg, var(--magenta), var(--purple))',
+    'linear-gradient(135deg, var(--purple), var(--cyan))',
+    'linear-gradient(135deg, var(--cyan), #4ade80)',
+    'linear-gradient(135deg, #4ade80, var(--yellow))',
+    'linear-gradient(135deg, var(--yellow), var(--magenta))',
+    'linear-gradient(135deg, var(--magenta-2), var(--purple))',
+    'linear-gradient(135deg, var(--cyan), var(--magenta))',
+  ];
+
+  return (
+    <section className="section dark" id="team">
+      <div className="shell">
+        <div className="reveal">
           <span className="eyebrow"><span className="bar"/> OUR TEAM</span>
           <h2 className="section-title">The people behind the studio.</h2>
         </div>
@@ -1076,7 +1082,6 @@ function People() {
             </div>
           ))}
         </div>
-
       </div>
     </section>
   );
@@ -1424,14 +1429,14 @@ function Footer({ onOpenPrivacy }) {
           <div className="footer-col">
             <h5>EXPLORE</h5>
             <a href="#about">About</a>
-            <a href="#workshops">Workshops</a>
             <a href="#jam">Game jam</a>
             <a href="#prize">Prize</a>
+            <a href="#workshops">Workshops</a>
           </div>
           <div className="footer-col">
             <h5>PEOPLE</h5>
-            <a href="#people">Team</a>
-            <a href="#people">Speakers</a>
+            <a href="#speakers">Speakers</a>
+            <a href="#team">Team</a>
             <a href="#faq">FAQ</a>
             <a href="#apply">Apply</a>
           </div>
@@ -1489,10 +1494,11 @@ function App() {
       <Nav />
       <Hero layout={t.heroLayout} />
       <About />
-      <Workshops />
       <Jam />
       <Prize />
-      <People />
+      <Speakers />
+      <Workshops />
+      <Team />
       <FAQ />
       <Apply formUrl={FORM_URL} />
       <Imprint />
