@@ -79,10 +79,6 @@ const SPEAKERS = [
     w: "02",
     confirmed: true
   },
-  { name: "TBD", role: "HR Generalist · hiring & application flow", w: "01", confirmed: false },
-  { name: "TBD", role: "Gameplay & Game-AI Programmer", w: "02", confirmed: false },
-  { name: "TBD", role: "Indie writer / dev · leading small teams", w: "03", confirmed: false },
-  { name: "TBD", role: "Producer · production, design, music", w: "03", confirmed: false },
 ];
 
 const TEAM_MEMBERS = [
@@ -1022,37 +1018,8 @@ function People() {
     <section className="section dark" id="people">
       <div className="shell">
 
-        {/* ── THE TEAM ── */}
-        <div className="reveal">
-          <span className="eyebrow"><span className="bar"/> OUR TEAM</span>
-          <h2 className="section-title">The people behind the studio.</h2>
-        </div>
-
-        <div className="team-photo-wrap reveal">
-          <img src="speakers/team.jpeg" alt="Göttingen Game Studio team" className="team-photo" loading="lazy" />
-          <div className="team-photo-caption">
-            <span className="tape" style={{ transform: 'rotate(-1.5deg)', fontSize: '10px', padding: '10px 14px' }}>★ TEAM GÖTTINGEN</span>
-          </div>
-        </div>
-
-        <div className="team-grid reveal">
-          {TEAM_MEMBERS.map((m, i) => (
-            <div className="team-card" key={i}>
-              <div className="team-avatar" style={{ background: teamColors[i % teamColors.length] }}>
-                {getInitials(m.name)}
-              </div>
-              <div className="team-info">
-                <div className="team-name">{m.name}</div>
-                <div className="team-role">{m.role}</div>
-                {m.desc && <div className="team-desc">{m.desc}</div>}
-              </div>
-              <span className="team-area-pill">{m.area}</span>
-            </div>
-          ))}
-        </div>
-
         {/* ── GUEST SPEAKERS ── */}
-        <div className="reveal" style={{ marginTop: '80px' }}>
+        <div className="reveal">
           <span className="eyebrow"><span className="bar"/> GUEST SPEAKERS</span>
           <h2 className="section-title">Industry voices. Real experience.</h2>
         </div>
@@ -1081,21 +1048,35 @@ function People() {
           ))}
         </div>
 
-        {tbd.length > 0 && (
-          <div className="reveal" style={{ marginTop: '40px' }}>
-            <span className="tentative">// MORE SPEAKERS DROPPING SOON</span>
-            <div className="speakers" style={{ marginTop: '20px' }}>
-              {tbd.map((s, i) => (
-                <div className="sp-card" key={i}>
-                  <div className="sp-portrait">?</div>
-                  <div className="sp-name">TBD</div>
-                  <div className="sp-title">{s.role}</div>
-                  <span className="sp-pill">W{s.w}</span>
-                </div>
-              ))}
-            </div>
+        {/* ── THE TEAM ── */}
+        <div className="reveal" style={{ marginTop: '80px' }}>
+          <span className="eyebrow"><span className="bar"/> OUR TEAM</span>
+          <h2 className="section-title">The people behind the studio.</h2>
+        </div>
+
+        <div className="team-photo-wrap reveal">
+          <img src="speakers/team.jpeg" alt="Göttingen Game Studio team" className="team-photo" loading="lazy" />
+          <div className="team-photo-caption">
+            <span className="tape" style={{ transform: 'rotate(-1.5deg)', fontSize: '10px', padding: '10px 14px' }}>★ TEAM GÖTTINGEN</span>
           </div>
-        )}
+        </div>
+
+        <div className="team-grid reveal">
+          {TEAM_MEMBERS.map((m, i) => (
+            <div className="team-card" key={i}>
+              <div className="team-avatar" style={{ background: teamColors[i % teamColors.length] }}>
+                {getInitials(m.name)}
+              </div>
+              <div className="team-info">
+                <div className="team-name">{m.name}</div>
+                <div className="team-role">{m.role}</div>
+                {m.desc && <div className="team-desc">{m.desc}</div>}
+              </div>
+              <span className="team-area-pill">{m.area}</span>
+            </div>
+          ))}
+        </div>
+
       </div>
     </section>
   );
