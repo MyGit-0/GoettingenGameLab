@@ -106,15 +106,15 @@ const TEAM_MEMBERS = [
   },
   {
     name: "Maxim",
-    role: "Team Member",
-    desc: "Supporting the project across multiple areas",
-    area: "Team"
+    role: "Event Operations",
+    desc: "Coordinating logistics, room setups, and participant registration.",
+    area: "Logistics"
   },
   {
     name: "Alp",
-    role: "Team Member",
-    desc: "Supporting the project across multiple areas",
-    area: "Team"
+    role: "Community & Outreach",
+    desc: "Building student engagement, social channels, and campus publicity.",
+    area: "Outreach"
   },
   {
     name: "Udari Wasana",
@@ -124,9 +124,9 @@ const TEAM_MEMBERS = [
   },
   {
     name: "Hassan",
-    role: "Team Member",
-    desc: "Supporting the project across multiple areas",
-    area: "Team"
+    role: "Technical Operations",
+    desc: "Assisting with developer environment setup, git help, and tech checkpoints.",
+    area: "Tech"
   },
 ];
 
@@ -1044,7 +1044,7 @@ function People() {
               <div className="team-info">
                 <div className="team-name">{m.name}</div>
                 <div className="team-role">{m.role}</div>
-                <div className="team-desc">{m.desc}</div>
+                {m.desc && <div className="team-desc">{m.desc}</div>}
               </div>
               <span className="team-area-pill">{m.area}</span>
             </div>
