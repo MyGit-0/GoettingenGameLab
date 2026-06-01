@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://goettingengamestudio.netlify.app/sitemap.xml

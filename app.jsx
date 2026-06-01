@@ -5,56 +5,55 @@ const WORKSHOPS = [
   {
     num: "01",
     title: "Intro to Game Industry",
-    desc: "Meet the Göttingen Game Lab, understand career paths/roles in the games industry, and get motivated to build your own project.",
-    output: "Roadmap to industry paths & Göttingen Game Lab connection",
+    desc: "Meet the Göttingen Game Studio team, hear from industry professionals, explore career paths and roles in games, and get motivated to build your own project.",
+    output: "Industry overview, career roadmap & guest speaker insights",
     goals: [
-      "Introduce Göttingen Game Lab",
-      "Introduce the game industry and career paths",
-      "Motivate students to join Workshop 2 and the Game Jam",
-      "Include an on-site speaker if possible"
+      "Introduce Göttingen Game Studio and our mission",
+      "Explore the game industry and career paths",
+      "Hear from guest speakers with real studio experience",
+      "Motivate students to join Workshop 2 and the Game Jam"
     ],
     todo: [
-      "What Göttingen Game Lab is and our resources",
+      "Game Studio intro and what we offer",
       "Game industry roles (design, code, art, sound, PM)",
-      "Career paths, funding & opportunities",
-      "Why interdisciplinary students are highly welcome",
+      "Guest speaker talks & Q\u0026A sessions",
+      "Career paths, funding \u0026 opportunities",
       "Next steps: Workshop 2 and the Game Jam"
     ]
   },
   {
     num: "02",
-    title: "Team Forming, Design Thinking, Tools, Production",
-    desc: "Form your dream team, learn game design thinking methodologies, and get introduced to game production tools (engines, Kanban boards, lightweight Scrum scope control).",
-    output: "Formed team, Kanban board & project scope plan",
+    title: "Rapid Prototyping with Accessible Tools",
+    desc: "Turn a small idea into a simple playable prototype using accessible tools, placeholders, templates, and optional AI-assisted workflows. Fast iteration and beginner-friendly experimentation.",
+    output: "A first prototype or prototype concept + a simple workflow for testing \u0026 iteration",
     goals: [
-      "Form collaborative game teams",
-      "Introduce game design thinking methodology",
-      "Introduce tools used in game production",
-      "Introduce Scrum & lightweight project methodology",
-      "Include online speaker / producer if possible"
+      "Turn ideas into simple playable prototypes quickly",
+      "Use accessible tools, placeholders \u0026 templates",
+      "Learn realistic scoping \u0026 fast iteration",
+      "Make prototyping beginner-friendly for all backgrounds"
     ],
     todo: [
-      "Prepare team forming / ice-breaker activity",
-      "Design thinking & game design methodology",
-      "Prototyping tools (engines, boards, asset/audio)",
-      "Lightweight Scrum/Kanban roles and tasks setup",
-      "Contact Filip (Producer) for guest session"
+      "Hands-on prototyping with accessible game tools",
+      "Using placeholders, templates \u0026 AI-assisted workflows",
+      "Scope management: keep it small, ship it fast",
+      "Testing \u0026 iteration workflow",
+      "Guest speaker on rapid feature development"
     ]
   },
   {
     num: "03",
     title: "Game Jam and Award",
     desc: "The final 48-hour challenge. Teams pitch, build, and present a small game. A mentor team will support you throughout, culminating in a showcase and awards.",
-    output: "A playable game prototype & Gamescom ticket award entry",
+    output: "A playable game prototype \u0026 Gamescom ticket award entry",
     goals: [
       "Teams build a small game/prototype in 48 hours",
       "Teams present their work in a public showcase",
       "Award winning team (Gamescom tickets!)"
     ],
     todo: [
-      "Define Game Jam format, duration & rules",
-      "Set submission requirements & judging criteria",
-      "Schedule mentor checkpoints & award ceremony"
+      "Define Game Jam format, duration \u0026 rules",
+      "Set submission requirements \u0026 judging criteria",
+      "Schedule mentor checkpoints \u0026 award ceremony"
     ]
   }
 ];
@@ -86,12 +85,57 @@ const SPEAKERS = [
   { name: "TBD", role: "Producer · production, design, music", w: "03", confirmed: false },
 ];
 
+const TEAM_MEMBERS = [
+  {
+    name: "Minh Tran",
+    role: "Founder & Project Lead",
+    desc: "M.A. English Philology · Ex-Product Manager at Wooga (June's Journey) · Marketing at Beyondthosehills",
+    area: "Coordination"
+  },
+  {
+    name: "Amirreza Aleyasin",
+    role: "Co-Founder & Developer",
+    desc: "M.Sc. Computational Biology · Certificate in Serious Game Design (Uppsala) · Python, ML, Docker, Git",
+    area: "Program"
+  },
+  {
+    name: "Simon Drexler",
+    role: "Project Coordination & Operations",
+    desc: "B.Sc. Psychology · Supports planning, coordination, communication, logistics and organizational tasks",
+    area: "Operations"
+  },
+  {
+    name: "Maxim",
+    role: "Team Member",
+    desc: "Supporting the project across multiple areas",
+    area: "Team"
+  },
+  {
+    name: "Alp",
+    role: "Team Member",
+    desc: "Supporting the project across multiple areas",
+    area: "Team"
+  },
+  {
+    name: "Udari Wasana",
+    role: "Marketing & Outreach",
+    desc: "M.Sc. Crop Protection · VP of Marketing at DEGIS Göttingen · Digital communication & community engagement",
+    area: "Marketing"
+  },
+  {
+    name: "Hassan",
+    role: "Team Member",
+    desc: "Supporting the project across multiple areas",
+    area: "Team"
+  },
+];
+
 const FAQS = [
   { q: "Do I need any coding experience?", a: "No. Göttingen Game Studio is beginner-friendly. Contribute through writing, art, sound, design, production, communication, or programming." },
   { q: "Who is this for?", a: "Any student at the University of Göttingen — any degree, any year, any background." },
   { q: "Do I have to attend everything?", a: "No. Pick the parts that interest you. Materials will be on Stud.IP / eCampus afterwards." },
   { q: "What is the 48-hour challenge?", a: "A short collaborative game-jam at the end. Teams ship a small playable game, with mentor checkpoints and a public showcase." },
-  { q: "When does it run?", a: "Coming July 2026. Sign up for the early-interest list to get the schedule first." },
+  { q: "When does it run?", a: "Coming June 2026. Sign up for the early-interest list to get the schedule first." },
 ];
 
 // ============= REVEAL HOOK =============
@@ -133,7 +177,7 @@ function Nav() {
           <a href="#about">about</a>
           <a href="#workshops">workshops</a>
           <a href="#jam">game jam</a>
-          <a href="#speakers">speakers</a>
+          <a href="#people">people</a>
           <a href="#apply">apply</a>
         </div>
         <a className="nav-cta" href="#apply">
@@ -697,7 +741,7 @@ function Hero({ layout }) {
       <div className="hero-bg" />
       <div className="shell hero-grid">
         <div className="hero-copy reveal">
-          <span className="kicker"><span className="dot" /> JULY 2026 · GÖTTINGEN</span>
+          <span className="kicker"><span className="dot" /> JUNE 2026 · GÖTTINGEN</span>
           <h1 className="hero-title">
             <span aria-hidden="true" className="echo echo-2"><span className="hero-title-top">GÖTTINGEN</span>GAME STUDIO</span>
             <span aria-hidden="true" className="echo"><span className="hero-title-top">GÖTTINGEN</span>GAME STUDIO</span>
@@ -715,7 +759,7 @@ function Hero({ layout }) {
             <span className="tag outline">BEGINNER-FRIENDLY</span>
           </div>
           <div className="hero-meta">
-            <span className="tape">★ JULY 15, 2026</span>
+            <span className="tape">★ JUNE 27, 2026</span>
             <div className="cta-row">
               <a href="#apply" className="btn btn-primary" data-platform="1">APPLY NOW <span>→</span></a>
               <a href="#workshops" className="btn btn-ghost">WHAT'S INSIDE</a>
@@ -847,7 +891,7 @@ function Workshops() {
 function Jam() {
   const [time, setTime] = useState({ d: 0, h: 0, m: 0, s: 0 });
   useEffect(() => {
-    const target = new Date('2026-07-15T09:00:00').getTime();
+    const target = new Date('2026-06-27T09:00:00').getTime();
     const tick = () => {
       const diff = Math.max(0, target - Date.now());
       const d = Math.floor(diff / 86400000);
@@ -873,7 +917,7 @@ function Jam() {
         </div>
         <div className="reveal">
           <div style={{ fontFamily: 'var(--pixel)', fontSize: '10px', color: '#0b0210', marginBottom: '14px', letterSpacing: '1px' }}>
-            // T-MINUS UNTIL JULY 15, 2026
+            // T-MINUS UNTIL JUNE 27, 2026
           </div>
           <div className="countdown">
             <div className="cd-cell"><div className="cd-num">{String(time.d).padStart(3, '0')}</div><div className="cd-label">days</div></div>
@@ -953,19 +997,66 @@ function Prize() {
   );
 }
 
-// ============= SPEAKERS GRID =============
-function Speakers() {
+// ============= PEOPLE (TEAM + SPEAKERS) =============
+function People() {
   const confirmed = SPEAKERS.filter(s => s.confirmed);
   const tbd = SPEAKERS.filter(s => !s.confirmed);
+
+  // Generate initials from name for avatar
+  const getInitials = (name) => {
+    return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  };
+
+  // Accent colors for team member avatars
+  const teamColors = [
+    'linear-gradient(135deg, var(--magenta), var(--purple))',
+    'linear-gradient(135deg, var(--purple), var(--cyan))',
+    'linear-gradient(135deg, var(--cyan), #4ade80)',
+    'linear-gradient(135deg, #4ade80, var(--yellow))',
+    'linear-gradient(135deg, var(--yellow), var(--magenta))',
+    'linear-gradient(135deg, var(--magenta-2), var(--purple))',
+    'linear-gradient(135deg, var(--cyan), var(--magenta))',
+  ];
+
   return (
-    <section className="section dark" id="speakers">
+    <section className="section dark" id="people">
       <div className="shell">
+
+        {/* ── THE TEAM ── */}
         <div className="reveal">
+          <span className="eyebrow"><span className="bar"/> OUR TEAM</span>
+          <h2 className="section-title">The people behind the studio.</h2>
+        </div>
+
+        <div className="team-photo-wrap reveal">
+          <img src="speakers/team.jpeg" alt="Göttingen Game Studio team" className="team-photo" loading="lazy" />
+          <div className="team-photo-caption">
+            <span className="tape" style={{ transform: 'rotate(-1.5deg)', fontSize: '10px', padding: '10px 14px' }}>★ TEAM GÖTTINGEN</span>
+          </div>
+        </div>
+
+        <div className="team-grid reveal">
+          {TEAM_MEMBERS.map((m, i) => (
+            <div className="team-card" key={i}>
+              <div className="team-avatar" style={{ background: teamColors[i % teamColors.length] }}>
+                {getInitials(m.name)}
+              </div>
+              <div className="team-info">
+                <div className="team-name">{m.name}</div>
+                <div className="team-role">{m.role}</div>
+                <div className="team-desc">{m.desc}</div>
+              </div>
+              <span className="team-area-pill">{m.area}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* ── GUEST SPEAKERS ── */}
+        <div className="reveal" style={{ marginTop: '80px' }}>
           <span className="eyebrow"><span className="bar"/> GUEST SPEAKERS</span>
           <h2 className="section-title">Industry voices. Real experience.</h2>
         </div>
 
-        {/* Confirmed speakers — featured cards */}
         <div className="speakers-featured reveal">
           {confirmed.map((s, i) => (
             <div className="sp-featured-card" key={i}>
@@ -990,7 +1081,6 @@ function Speakers() {
           ))}
         </div>
 
-        {/* TBD speakers */}
         {tbd.length > 0 && (
           <div className="reveal" style={{ marginTop: '40px' }}>
             <span className="tentative">// MORE SPEAKERS DROPPING SOON</span>
@@ -1359,7 +1449,8 @@ function Footer({ onOpenPrivacy }) {
           </div>
           <div className="footer-col">
             <h5>PEOPLE</h5>
-            <a href="#speakers">Speakers</a>
+            <a href="#people">Team</a>
+            <a href="#people">Speakers</a>
             <a href="#faq">FAQ</a>
             <a href="#apply">Apply</a>
           </div>
@@ -1420,7 +1511,7 @@ function App() {
       <Workshops />
       <Jam />
       <Prize />
-      <Speakers />
+      <People />
       <FAQ />
       <Apply formUrl={FORM_URL} />
       <Imprint />
