@@ -2385,6 +2385,56 @@ a { color: inherit; text-decoration: none; }
   100% { transform: scale(2); opacity: 0; }
 }
 
+/* ─── TARGET GEM (distinct collectible) ─── */
+.game-target-gem {
+  color: var(--cyan) !important;
+  font-size: 34px !important;
+  text-shadow:
+    0 0 14px var(--cyan),
+    0 0 28px rgba(0, 232, 255, 0.6),
+    0 0 56px rgba(0, 232, 255, 0.3) !important;
+  filter: drop-shadow(0 0 8px var(--cyan));
+  animation: gem-float 1.6s ease-in-out infinite, gem-rotate 4s linear infinite !important;
+}
+.game-target-gem::before {
+  border-color: var(--cyan) !important;
+  animation: gem-ring 1.4s ease-out infinite !important;
+}
+.game-target-gem::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border: 2px solid var(--cyan);
+  border-radius: 4px;
+  opacity: 0.5;
+  transform: rotate(45deg);
+  animation: gem-border-spin 3s linear infinite;
+}
+@keyframes gem-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-14px); }
+}
+@keyframes gem-rotate {
+  0% { filter: drop-shadow(0 0 8px var(--cyan)) hue-rotate(0deg); }
+  50% { filter: drop-shadow(0 0 16px var(--cyan)) hue-rotate(20deg); }
+  100% { filter: drop-shadow(0 0 8px var(--cyan)) hue-rotate(0deg); }
+}
+@keyframes gem-ring {
+  0% { transform: scale(0.5); opacity: 0.8; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+@keyframes gem-border-spin {
+  from { transform: rotate(45deg); }
+  to { transform: rotate(405deg); }
+}
+
+/* ─── GEM CARRY (above player head, distinct color) ─── */
+.game-carry-gem {
+  color: var(--cyan) !important;
+  text-shadow: 0 0 10px var(--cyan), 0 0 20px rgba(0, 232, 255, 0.5) !important;
+  font-size: 16px !important;
+}
+
 /* ─── GOAL (home base) ─── */
 .game-goal {
   position: absolute;
@@ -2641,6 +2691,24 @@ a { color: inherit; text-decoration: none; }
   }
   .privacy-overlay { padding: 16px; }
   .privacy-modal-body { padding: 24px; }
+
+  /* Move PLAY button and gamepad FAB to top-right on mobile so they don't cover the character */
+  .play-toggle {
+    bottom: auto !important;
+    top: 140px;
+    left: auto !important;
+    right: 12px;
+    padding: 10px 14px;
+    font-size: 9px;
+  }
+  .gp-mobile-fab {
+    bottom: auto !important;
+    top: 180px;
+    left: auto !important;
+    right: 12px;
+    padding: 8px 16px;
+    font-size: 9px;
+  }
 }
 @media (max-width: 560px) {
   .speakers { grid-template-columns: 1fr; }

@@ -516,7 +516,7 @@ function MiniGame() {
     if (!playing) return;
     const collect = () => {
       if (cameraScrolling.current) return; // skip while we're auto-scrolling
-      const sel = '[data-platform], .play-toggle, .tape, .btn, .tag, .stat, .workshop-num, .cd-cell, .sp-card, .nav-cta, .cta-big, .jam-prize, .section-title, .gp-hint, .footer-bot, .partner-logo, .nav, .eyebrow, .hero-title, .hero-sub, .hero-tags, .kicker, .workshop-title, .workshop-output, .faq-q, .prize-stamp, .prize-kicker, .ticket, .countdown, .jam-eyebrow, .jam-title, .apply-title, .apply-frame-bar, .apply-meta-row, .footer-col h5, .logo, .float-badge, .tab, .speaker-avatar, .play-banner';
+      const sel = '[data-platform], .play-toggle, .tape, .btn, .tag, .stat, .workshop-num, .cd-cell, .sp-card, .nav-cta, .cta-big, .jam-prize, .section-title, .gp-hint, .footer-bot, .partner-logo, .nav, .eyebrow, .hero-title, .hero-sub, .hero-tags, .kicker, .workshop-title, .workshop-output, .faq-q, .prize-stamp, .prize-kicker, .ticket, .countdown, .jam-eyebrow, .jam-title, .apply-title, .apply-frame-bar, .apply-meta-row, .footer-col h5, .logo, .float-badge, .tab, .speaker-avatar, .play-banner, .about-copy p, .workshop-desc, .jam-desc, .prize-sub, .prize-title, .sp-featured-bio, .sp-featured-name, .sp-featured-role, .sp-featured-company, .sp-featured-card, .team-card, .team-name, .team-role, .team-avatar, .team-photo-wrap, .faq-a p, .apply-sub, .apply-meta, .apply-fallback, .imprint-panel, .imprint-panel h3, .imprint-panel p, .ws-goals-list li, .ws-todo-list li, .ws-section-meta h4, .consent-inner, .footer-brand p, .footer-col a, .cd-num, .stat-num, .stat-label, .hero-meta, .prize-stamps, .ticket-body, .ticket-stub, .sp-pill, .sp-linkedin, .team-area-pill, .team-photo-caption, .prize-copy, .prize-title-big';
       const nodes = document.querySelectorAll(sel);
       const list = [];
       nodes.forEach((n) => {
@@ -881,8 +881,8 @@ function MiniGame() {
   // Compute HUD quest text
   const questText = gameState === 'dead' ? '💀 GAME OVER'
     : gameState === 'won' ? '🏆 YOU WIN!'
-    : hasStar ? '↩ BRING ★ BACK TO HOME!'
-    : '★ FIND THE STAR!';
+    : hasStar ? '↩ BRING ◆ BACK TO HOME!'
+    : '◆ FIND THE GEM!';
 
   return (
     <>
@@ -941,13 +941,13 @@ function MiniGame() {
           {/* ── STAR (collectible) ── */}
           {!hasStar && !starCollected && (
             <div
-              className="game-star-pickup"
+              className="game-star-pickup game-target-gem"
               style={{
                 left: starPos.x + 'px',
                 top: starPos.y + 'px',
               }}
             >
-              ★
+              ◆
             </div>
           )}
 
@@ -976,7 +976,7 @@ function MiniGame() {
               <div className="player-bubble">Hi, I'm Bibidy!</div>
             )}
             {hasStar && !starCollected && (
-              <div className="player-star-carry">★</div>
+              <div className="player-star-carry game-carry-gem">◆</div>
             )}
             <div className="player-body">
               <div className="player-eye l" />
