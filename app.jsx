@@ -76,7 +76,7 @@ const SPEAKERS = [
     bio: "BAFTA-nominated writer and voice actor. Known for Vampire Therapist, and voicing Ares, Dionysus & Theseus in the Hades games. Founder of Little Bat Games.",
     photo: "speakers/cyrus.jpeg",
     linkedin: "https://www.linkedin.com/in/cyrus-nemati/",
-    w: "02",
+    w: "01",
     confirmed: true
   },
 ];
