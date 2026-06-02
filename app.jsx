@@ -390,23 +390,85 @@ function Gamepad({ variant = "inline" }) {
 }
 
 // ============= MINIGAME (platformer overlay) =============
+
+// Trap positions: placed in absolute page coordinates, computed once on start
+function computeTraps() {
+  const traps = [];
+  // Place traps near identifiable sections
+  const sections = [
+    { sel: '#about', offsets: [0.2, 0.7] },
+    { sel: '#jam', offsets: [0.3, 0.8] },
+    { sel: '#prize', offsets: [0.15, 0.5, 0.85] },
+    { sel: '#workshops', offsets: [0.4, 0.9] },
+    { sel: '#speakers', offsets: [0.25, 0.65] },
+    { sel: '#team', offsets: [0.35, 0.75] },
+    { sel: '#faq', offsets: [0.5] },
+    { sel: '#apply', offsets: [0.2, 0.6] },
+  ];
+  sections.forEach(({ sel, offsets }) => {
+    const el = document.querySelector(sel);
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const secTop = r.top + window.scrollY;
+    const secW = r.width;
+    offsets.forEach((pct) => {
+      traps.push({
+        x: r.left + window.scrollX + secW * pct - 16,
+        y: secTop + r.height - 22,
+        w: 32,
+        h: 22,
+      });
+    });
+  });
+  return traps;
+}
+
+// Pick a star position: random section, random horizontal offset
+function computeStarPos() {
+  const secs = ['#about', '#jam', '#prize', '#workshops', '#speakers', '#team'];
+  const pick = secs[Math.floor(Math.random() * secs.length)];
+  const el = document.querySelector(pick);
+  if (!el) return { x: 400, y: 200 };
+  const r = el.getBoundingClientRect();
+  return {
+    x: r.left + window.scrollX + r.width * (0.15 + Math.random() * 0.7),
+    y: r.top + window.scrollY + r.height * 0.4,
+  };
+}
+
 function MiniGame() {
   const [playing, setPlaying] = useState(false);
+  const [gameState, setGameState] = useState('playing'); // 'playing' | 'dead' | 'won'
   const [pos, setPos] = useState({ x: 200, y: 0, facing: 1, moving: false, onGround: false });
+  const [hasStar, setHasStar] = useState(false);
+  const [starCollected, setStarCollected] = useState(false);
+  const [starPos, setStarPos] = useState({ x: 0, y: 0 });
+  const [goalPos, setGoalPos] = useState({ x: 0, y: 0 });
+  const [traps, setTraps] = useState([]);
+
   const ref = useRef({
     x: 200, y: 100, vx: 0, vy: 0,
     onGround: false, facing: 1,
-    // jump state
-    jumpConsumed: true,       // true = jump key was already handled, prevents hold-repeat
-    coyoteTimer: 0,           // frames left where jump is still allowed after walking off edge
-    jumpBuffer: 0,            // frames left where a pre-landing jump press is remembered
+    jumpConsumed: true,
+    coyoteTimer: 0,
+    jumpBuffer: 0,
   });
   const platformsRef = useRef([]);
+  const trapsRef = useRef([]);
+  const starRef = useRef({ x: 0, y: 0 });
+  const goalRef = useRef({ x: 0, y: 0 });
+  const hasStarRef = useRef(false);
+  const starCollectedRef = useRef(false);
+  const gameStateRef = useRef('playing');
   const tickerRef = useRef(null);
   const playingRef = useRef(false);
+  const cameraScrolling = useRef(false);
 
-  // keep ref in sync so the keydown handler can check it
+  // keep refs in sync
   useEffect(() => { playingRef.current = playing; }, [playing]);
+  useEffect(() => { hasStarRef.current = hasStar; }, [hasStar]);
+  useEffect(() => { starCollectedRef.current = starCollected; }, [starCollected]);
+  useEffect(() => { gameStateRef.current = gameState; }, [gameState]);
 
   // listen for the secret key / button
   useEffect(() => {
@@ -433,14 +495,13 @@ function MiniGame() {
     return () => window.removeEventListener('keydown', prevent);
   }, [playing]);
 
-  // track jump-press edge (consumed flag resets when key is released)
+  // track jump-press edge
   useEffect(() => {
     const onInput = (key, val) => {
       if (key === 'jump') {
         if (val) {
-          // key just pressed — allow a new jump
           ref.current.jumpConsumed = false;
-          ref.current.jumpBuffer = 8; // buffer for ~8 frames
+          ref.current.jumpBuffer = 8;
         } else {
           ref.current.jumpConsumed = true;
         }
@@ -450,10 +511,11 @@ function MiniGame() {
     return () => inputListeners.delete(onInput);
   }, []);
 
-  // gather platforms once playing starts; refresh on resize/scroll occasionally
+  // gather platforms once playing starts
   useEffect(() => {
     if (!playing) return;
     const collect = () => {
+      if (cameraScrolling.current) return; // skip while we're auto-scrolling
       const sel = '[data-platform], .play-toggle, .tape, .btn, .tag, .stat, .workshop-num, .cd-cell, .sp-card, .nav-cta, .cta-big, .jam-prize, .section-title, .gp-hint, .footer-bot, .partner-logo, .nav, .eyebrow, .hero-title, .hero-sub, .hero-tags, .kicker, .workshop-title, .workshop-output, .faq-q, .prize-stamp, .prize-kicker, .ticket, .countdown, .jam-eyebrow, .jam-title, .apply-title, .apply-frame-bar, .apply-meta-row, .footer-col h5, .logo, .float-badge, .tab, .speaker-avatar, .play-banner';
       const nodes = document.querySelectorAll(sel);
       const list = [];
@@ -467,7 +529,6 @@ function MiniGame() {
           h: r.height,
         });
       });
-      // ground = bottom of document
       list.push({
         x: 0,
         y: document.documentElement.scrollHeight - 4,
@@ -488,6 +549,91 @@ function MiniGame() {
     };
   }, [playing]);
 
+  // camera-follow: smooth scroll when character approaches viewport edges
+  useEffect(() => {
+    if (!playing) return;
+    const MARGIN = 0.25; // 25% from each edge
+    let rafId = null;
+
+    const follow = () => {
+      if (gameStateRef.current !== 'playing') {
+        rafId = requestAnimationFrame(follow);
+        return;
+      }
+      const s = ref.current;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const sx = window.scrollX;
+      const sy = window.scrollY;
+      const charCenterY = s.y + 14; // half character height
+      const marginTop = vh * MARGIN;
+      const marginBottom = vh * (1 - MARGIN);
+      const docH = document.documentElement.scrollHeight;
+
+      let targetY = sy;
+
+      // If character is above the top margin of the viewport
+      if (charCenterY < sy + marginTop) {
+        targetY = charCenterY - marginTop;
+      }
+      // If character is below the bottom margin of the viewport
+      else if (charCenterY > sy + marginBottom) {
+        targetY = charCenterY - marginBottom;
+      }
+
+      // Clamp to valid scroll range
+      targetY = Math.max(0, Math.min(targetY, docH - vh));
+
+      // Smooth interpolation
+      const diff = targetY - sy;
+      if (Math.abs(diff) > 1) {
+        cameraScrolling.current = true;
+        window.scrollTo({
+          left: sx,
+          top: sy + diff * 0.12, // lerp factor
+        });
+        // Release the scroll lock after a tick
+        requestAnimationFrame(() => { cameraScrolling.current = false; });
+      }
+
+      rafId = requestAnimationFrame(follow);
+    };
+    rafId = requestAnimationFrame(follow);
+    return () => cancelAnimationFrame(rafId);
+  }, [playing]);
+
+  // restart game helper
+  const restartGame = useCallback(() => {
+    setGameState('playing');
+    setHasStar(false);
+    setStarCollected(false);
+    hasStarRef.current = false;
+    starCollectedRef.current = false;
+    gameStateRef.current = 'playing';
+    // Recompute star position
+    const sp = computeStarPos();
+    setStarPos(sp);
+    starRef.current = sp;
+    // Reset traps
+    const t = computeTraps();
+    setTraps(t);
+    trapsRef.current = t;
+    // Respawn character
+    const playBtn = document.querySelector('.play-toggle');
+    let spawnX = window.scrollX + window.innerWidth / 2 - 12;
+    let spawnY = window.scrollY + 80;
+    if (playBtn) {
+      const r = playBtn.getBoundingClientRect();
+      spawnX = r.left + window.scrollX + r.width / 2 - 13;
+      spawnY = r.top + window.scrollY - 32;
+    }
+    ref.current.x = spawnX;
+    ref.current.y = spawnY;
+    ref.current.vx = 0;
+    ref.current.vy = 0;
+    ref.current.onGround = false;
+  }, []);
+
   // physics loop
   useEffect(() => {
     if (!playing) return;
@@ -499,6 +645,11 @@ function MiniGame() {
       const r = playBtn.getBoundingClientRect();
       spawnX = r.left + window.scrollX + r.width / 2 - 13;
       spawnY = r.top + window.scrollY - 32;
+      // goal position is near the play button
+      const gx = r.left + window.scrollX + r.width / 2 - 20;
+      const gy = r.top + window.scrollY - 48;
+      setGoalPos({ x: gx, y: gy });
+      goalRef.current = { x: gx, y: gy };
     }
     ref.current = {
       ...ref.current,
@@ -507,38 +658,59 @@ function MiniGame() {
       vx: 0, vy: 0, onGround: false, facing: 1,
       jumpConsumed: true, coyoteTimer: 0, jumpBuffer: 0,
     };
+
+    // Initialize star, traps, and game state
+    setGameState('playing');
+    gameStateRef.current = 'playing';
+    setHasStar(false);
+    setStarCollected(false);
+    hasStarRef.current = false;
+    starCollectedRef.current = false;
+
+    // Delay star/trap init slightly so layout is settled
+    setTimeout(() => {
+      const sp = computeStarPos();
+      setStarPos(sp);
+      starRef.current = sp;
+      const t = computeTraps();
+      setTraps(t);
+      trapsRef.current = t;
+    }, 200);
+
     let last = performance.now();
     const W = 26, H = 28;
     const GRAVITY = 1800;
-    const ACCEL = 2400;       // how fast the player accelerates
-    const MAX_SPEED = 340;    // top run speed
-    const FRICTION = 1800;    // deceleration when no input
+    const ACCEL = 2400;
+    const MAX_SPEED = 340;
+    const FRICTION = 1800;
     const JUMP = 1050;
-    const COYOTE_FRAMES = 6;  // forgiveness frames after leaving edge
+    const COYOTE_FRAMES = 6;
 
     const step = (t) => {
       const dt = Math.min(0.033, (t - last) / 1000);
       last = t;
       const s = ref.current;
 
-      // ─── horizontal movement (acceleration-based) ───
+      // Skip physics if dead or won
+      if (gameStateRef.current !== 'playing') {
+        tickerRef.current = requestAnimationFrame(step);
+        return;
+      }
+
+      // ─── horizontal movement ───
       let inputDir = 0;
       if (gameInput.left) inputDir -= 1;
       if (gameInput.right) inputDir += 1;
 
       if (inputDir !== 0) {
-        // accelerate towards input direction
         s.vx += inputDir * ACCEL * dt;
-        // clamp to max speed
         if (s.vx > MAX_SPEED) s.vx = MAX_SPEED;
         if (s.vx < -MAX_SPEED) s.vx = -MAX_SPEED;
         s.facing = inputDir;
       } else {
-        // decelerate via friction
         const sign = Math.sign(s.vx);
         if (sign !== 0) {
           s.vx -= sign * FRICTION * dt;
-          // stop if we cross zero
           if (Math.sign(s.vx) !== sign) s.vx = 0;
         }
       }
@@ -562,7 +734,6 @@ function MiniGame() {
         s.jumpBuffer = 0;
       }
 
-      // variable jump height: cut velocity when key released mid-jump
       if (!gameInput.jump && s.vy < -JUMP * 0.4) {
         s.vy = -JUMP * 0.4;
       }
@@ -575,7 +746,7 @@ function MiniGame() {
       const nextX = s.x + s.vx * dt;
       let nextY = s.y + s.vy * dt;
 
-      // ─── platform collision (top only, one-way) ───
+      // ─── platform collision ───
       let onGround = false;
       const feetPrev = s.y + H;
       const feetNext = nextY + H;
@@ -584,7 +755,6 @@ function MiniGame() {
       for (const p of platformsRef.current) {
         if (cx2 < p.x || cx1 > p.x + p.w) continue;
         const top = p.y;
-        // increased tolerance (8px) so fast falls don't tunnel through
         if (s.vy >= 0 && feetPrev <= top + 8 && feetNext >= top) {
           nextY = top - H;
           s.vy = 0;
@@ -596,24 +766,65 @@ function MiniGame() {
       s.x = nextX;
       s.y = nextY;
 
-      // wrap horizontally across viewport (exit one side, enter the other)
+      // wrap horizontally
       const vpLeft = window.scrollX;
       const vpRight = window.scrollX + window.innerWidth;
       if (s.x + W < vpLeft) s.x = vpRight;
       if (s.x > vpRight) s.x = vpLeft - W + 2;
 
-      // invisible ceiling at top of page
+      // invisible ceiling
       if (s.y < 0) {
         s.y = 0;
         if (s.vy < 0) s.vy = 0;
       }
 
-      // invisible floor at bottom of page
+      // invisible floor
       const docBottom = document.documentElement.scrollHeight - H;
       if (s.y > docBottom) {
         s.y = docBottom;
         s.vy = 0;
         s.onGround = true;
+      }
+
+      // ─── trap collision ───
+      const playerRect = { x: s.x + 4, y: s.y + 4, w: W - 8, h: H - 4 };
+      for (const trap of trapsRef.current) {
+        if (
+          playerRect.x < trap.x + trap.w &&
+          playerRect.x + playerRect.w > trap.x &&
+          playerRect.y < trap.y + trap.h &&
+          playerRect.y + playerRect.h > trap.y
+        ) {
+          gameStateRef.current = 'dead';
+          setGameState('dead');
+          s.vx = 0;
+          s.vy = 0;
+          break;
+        }
+      }
+
+      // ─── star pickup ───
+      if (!hasStarRef.current && !starCollectedRef.current) {
+        const sp = starRef.current;
+        const dist = Math.hypot((s.x + W / 2) - sp.x, (s.y + H / 2) - sp.y);
+        if (dist < 40) {
+          hasStarRef.current = true;
+          setHasStar(true);
+        }
+      }
+
+      // ─── goal check (return star to goal) ───
+      if (hasStarRef.current && !starCollectedRef.current) {
+        const g = goalRef.current;
+        const dist = Math.hypot((s.x + W / 2) - (g.x + 20), (s.y + H / 2) - (g.y + 20));
+        if (dist < 50) {
+          starCollectedRef.current = true;
+          setStarCollected(true);
+          gameStateRef.current = 'won';
+          setGameState('won');
+          s.vx = 0;
+          s.vy = 0;
+        }
       }
 
       setPos({
@@ -628,7 +839,7 @@ function MiniGame() {
   }, [playing]);
 
   const isRunning = pos.moving && pos.onGround;
-  const [stars, setStars] = useState([]);
+  const [burstStars, setBurstStars] = useState([]);
   const [showBubble, setShowBubble] = useState(false);
 
   // dismiss bubble on first movement input
@@ -663,9 +874,15 @@ function MiniGame() {
         hue: [340, 50, 180, 280][i % 4],
       };
     });
-    setStars(newStars);
-    setTimeout(() => setStars([]), 800);
+    setBurstStars(newStars);
+    setTimeout(() => setBurstStars([]), 800);
   }, []);
+
+  // Compute HUD quest text
+  const questText = gameState === 'dead' ? '💀 GAME OVER'
+    : gameState === 'won' ? '🏆 YOU WIN!'
+    : hasStar ? '↩ BRING ★ BACK TO HOME!'
+    : '★ FIND THE STAR!';
 
   return (
     <>
@@ -686,7 +903,7 @@ function MiniGame() {
       >
         {playing ? '■ STOP' : '▶ PLAY'}
       </button>
-      {stars.map((s) => (
+      {burstStars.map((s) => (
         <span
           key={s.id}
           className="play-star-particle"
@@ -702,8 +919,53 @@ function MiniGame() {
       ))}
       {playing && (
         <>
+          {/* ── TRAPS (spikes) ── */}
+          {traps.map((trap, i) => (
+            <div
+              key={'trap-' + i}
+              className="game-trap"
+              style={{
+                left: trap.x + 'px',
+                top: trap.y + 'px',
+                width: trap.w + 'px',
+                height: trap.h + 'px',
+              }}
+            >
+              <div className="trap-spike s1" />
+              <div className="trap-spike s2" />
+              <div className="trap-spike s3" />
+              <div className="trap-spike s4" />
+            </div>
+          ))}
+
+          {/* ── STAR (collectible) ── */}
+          {!hasStar && !starCollected && (
+            <div
+              className="game-star-pickup"
+              style={{
+                left: starPos.x + 'px',
+                top: starPos.y + 'px',
+              }}
+            >
+              ★
+            </div>
+          )}
+
+          {/* ── GOAL (home base) ── */}
           <div
-            className={`player${isRunning ? ' running' : ''}${!pos.onGround ? ' airborne' : ''}`}
+            className={`game-goal${hasStar ? ' goal-active' : ''}${starCollected ? ' goal-done' : ''}`}
+            style={{
+              left: goalPos.x + 'px',
+              top: goalPos.y + 'px',
+            }}
+          >
+            <span className="goal-flag">⚑</span>
+            <span className="goal-label">{starCollected ? 'DONE!' : 'HOME'}</span>
+          </div>
+
+          {/* ── PLAYER ── */}
+          <div
+            className={`player${isRunning ? ' running' : ''}${!pos.onGround ? ' airborne' : ''}${gameState === 'dead' ? ' dead' : ''}`}
             style={{
               left: pos.x + 'px',
               top: pos.y + 'px',
@@ -712,6 +974,9 @@ function MiniGame() {
           >
             {showBubble && (
               <div className="player-bubble">Hi, I'm Bibidy!</div>
+            )}
+            {hasStar && !starCollected && (
+              <div className="player-star-carry">★</div>
             )}
             <div className="player-body">
               <div className="player-eye l" />
@@ -722,9 +987,40 @@ function MiniGame() {
               <div /><div />
             </div>
           </div>
+
+          {/* ── PLAY BANNER with quest ── */}
           <div className="play-banner">
-            ♛ PLAY MODE · ←/→ to move · ↑/SPACE to jump · jump on the buttons!
+            ♛ PLAY MODE · ←/→ move · ↑/SPACE jump · ⚠ avoid spikes!
           </div>
+
+          {/* ── QUEST HUD ── */}
+          <div className={`game-hud${gameState === 'dead' ? ' hud-dead' : ''}${gameState === 'won' ? ' hud-won' : ''}`}>
+            {questText}
+          </div>
+
+          {/* ── GAME OVER OVERLAY ── */}
+          {gameState === 'dead' && (
+            <div className="game-overlay dead-overlay">
+              <div className="game-overlay-box">
+                <div className="game-overlay-icon">💀</div>
+                <h3 className="game-overlay-title">GAME OVER</h3>
+                <p className="game-overlay-sub">Bibidy hit a spike!</p>
+                <button className="game-overlay-btn" onClick={restartGame}>↻ TRY AGAIN</button>
+              </div>
+            </div>
+          )}
+
+          {/* ── WIN OVERLAY ── */}
+          {gameState === 'won' && (
+            <div className="game-overlay win-overlay">
+              <div className="game-overlay-box">
+                <div className="game-overlay-icon">🏆</div>
+                <h3 className="game-overlay-title">YOU WIN!</h3>
+                <p className="game-overlay-sub">Bibidy brought the star home!</p>
+                <button className="game-overlay-btn" onClick={restartGame}>★ PLAY AGAIN</button>
+              </div>
+            </div>
+          )}
         </>
       )}
     </>
