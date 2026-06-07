@@ -4,6 +4,8 @@ const { useState, useEffect, useRef, useCallback } = React;
 const WORKSHOPS = [
   {
     num: "01",
+    date: "4.7 Info Session",
+    short: "4.7",
     title: "Intro to Game Industry",
     desc: "Meet the Göttingen Game Studio team, hear from industry professionals, explore career paths and roles in games, and get motivated to build your own project.",
     output: "Industry overview, career roadmap & guest speaker insights",
@@ -16,44 +18,48 @@ const WORKSHOPS = [
     todo: [
       "Game Studio intro and what we offer",
       "Game industry roles (design, code, art, sound, PM)",
-      "Guest speaker talks & Q\u0026A sessions",
-      "Career paths, funding \u0026 opportunities",
+      "Guest speaker talks & Q&A sessions",
+      "Career paths, funding & opportunities",
       "Next steps: Workshop 2 and the Game Jam"
     ]
   },
   {
     num: "02",
+    date: "5.7 Hands-on Workshop",
+    short: "5.7",
     title: "Rapid Prototyping with Accessible Tools",
     desc: "Turn a small idea into a simple playable prototype using accessible tools, placeholders, templates, and optional AI-assisted workflows. Fast iteration and beginner-friendly experimentation.",
-    output: "A first prototype or prototype concept + a simple workflow for testing \u0026 iteration",
+    output: "A first prototype or prototype concept + a simple workflow for testing & iteration",
     goals: [
       "Turn ideas into simple playable prototypes quickly",
-      "Use accessible tools, placeholders \u0026 templates",
-      "Learn realistic scoping \u0026 fast iteration",
+      "Use accessible tools, placeholders & templates",
+      "Learn realistic scoping & fast iteration",
       "Make prototyping beginner-friendly for all backgrounds"
     ],
     todo: [
       "Hands-on prototyping with accessible game tools",
-      "Using placeholders, templates \u0026 AI-assisted workflows",
+      "Using placeholders, templates & AI-assisted workflows",
       "Scope management: keep it small, ship it fast",
-      "Testing \u0026 iteration workflow",
+      "Testing & iteration workflow",
       "Guest speaker on rapid feature development"
     ]
   },
   {
     num: "03",
+    date: "10.7 Game Jam",
+    short: "10.7",
     title: "Game Jam and Award",
     desc: "The final 48-hour challenge. Teams pitch, build, and present a small game. A mentor team will support you throughout, culminating in a showcase and awards.",
-    output: "A playable game prototype \u0026 Gamescom ticket award entry",
+    output: "A playable game prototype & Gamescom ticket award entry",
     goals: [
       "Teams build a small game/prototype in 48 hours",
       "Teams present their work in a public showcase",
       "Award winning team (Gamescom tickets!)"
     ],
     todo: [
-      "Define Game Jam format, duration \u0026 rules",
-      "Set submission requirements \u0026 judging criteria",
-      "Schedule mentor checkpoints \u0026 award ceremony"
+      "Define Game Jam format, duration & rules",
+      "Set submission requirements & judging criteria",
+      "Schedule mentor checkpoints & award ceremony"
     ]
   }
 ];
@@ -93,6 +99,13 @@ const TEAM_MEMBERS = [
     role: "Co-Founder & Developer",
     desc: "M.Sc. Computational Biology · Certificate in Serious Game Design (Uppsala) · Python, ML, Docker, Git",
     area: "Program"
+  },
+  {
+    name: "Thao Tran",
+    role: "Senior UX/UI Designer",
+    desc: "Created the brand identity, graphics, and layout for Göttingen Game Studio.",
+    area: "Design",
+    behance: "https://www.behance.net/sandratran3"
   },
   {
     name: "Simon Drexler",
@@ -1145,13 +1158,13 @@ function Workshops() {
               className={`tab ${tab === i ? 'active' : ''}`}
               onClick={() => setTab(i)}
             >
-              W{ws.num}
+              {ws.date}
             </button>
           ))}
         </div>
         <div className="workshop-body">
           <div className="workshop-pane" key={'l' + tab}>
-            <div className="workshop-num">W{w.num}</div>
+            <div className="workshop-num">{w.short}</div>
             <h3 className="workshop-title">{w.title}</h3>
             <p className="workshop-desc">{w.desc}</p>
             <span className="workshop-output">↳ {w.output}</span>
@@ -1303,27 +1316,30 @@ function Speakers() {
         </div>
 
         <div className="speakers-featured reveal">
-          {confirmed.map((s, i) => (
-            <div className="sp-featured-card" key={i}>
-              <div className="sp-featured-photo">
-                <img src={s.photo} alt={s.name} loading="lazy" />
-              </div>
-              <div className="sp-featured-info">
-                <div className="sp-featured-header">
-                  <h3 className="sp-featured-name">{s.name}</h3>
-                  <span className="sp-pill">W{s.w}</span>
+          {confirmed.map((s, i) => {
+            const ws = WORKSHOPS.find(w => w.num === s.w);
+            return (
+              <div className="sp-featured-card" key={i}>
+                <div className="sp-featured-photo">
+                  <img src={s.photo} alt={s.name} loading="lazy" />
                 </div>
-                <div className="sp-featured-role">{s.role}</div>
-                <div className="sp-featured-company">{s.company}</div>
-                <p className="sp-featured-bio">{s.bio}</p>
-                {s.linkedin && (
-                  <a href={s.linkedin} target="_blank" rel="noopener" className="sp-linkedin">
-                    LinkedIn →
-                  </a>
-                )}
+                <div className="sp-featured-info">
+                  <div className="sp-featured-header">
+                    <h3 className="sp-featured-name">{s.name}</h3>
+                    <span className="sp-pill">{ws ? ws.date : `W${s.w}`}</span>
+                  </div>
+                  <div className="sp-featured-role">{s.role}</div>
+                  <div className="sp-featured-company">{s.company}</div>
+                  <p className="sp-featured-bio">{s.bio}</p>
+                  {s.linkedin && (
+                    <a href={s.linkedin} target="_blank" rel="noopener" className="sp-linkedin">
+                      LinkedIn →
+                    </a>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>
@@ -1373,6 +1389,11 @@ function Team() {
                 <div className="team-name">{m.name}</div>
                 <div className="team-role">{m.role}</div>
                 {m.desc && <div className="team-desc">{m.desc}</div>}
+                {m.behance && (
+                  <a href={m.behance} target="_blank" rel="noopener" className="team-link">
+                    Behance →
+                  </a>
+                )}
               </div>
               <span className="team-area-pill">{m.area}</span>
             </div>
