@@ -283,7 +283,7 @@ function computeTraps() {
 
 
 // Goose SVG character
-function GooseSVG({ flapping, dead, facingLeft }) {
+function GooseSVG({ flapping, dead, facingLeft, moving }) {
   return (
     <svg
       viewBox="0 0 60 48"
@@ -308,21 +308,36 @@ function GooseSVG({ flapping, dead, facingLeft }) {
       {/* Head */}
       <circle cx="46" cy="7" r="9" fill="#f5f0e8" stroke="#c8b89a" strokeWidth="1.5"/>
       {/* Eye */}
-      <circle cx={dead ? 48 : 49} cy="5" r="2.2" fill="#1a1a2e"/>
-      <circle cx="50" cy="4" r="0.8" fill="white"/>
-      {dead && <>
-        <line x1="47" y1="3" x2="49" y2="5" stroke="#ff4444" strokeWidth="1.5"/>
-        <line x1="49" y1="3" x2="47" y2="5" stroke="#ff4444" strokeWidth="1.5"/>
-      </>}
+      {!dead ? (
+        <>
+          {/* Big kawaii eye */}
+          <circle cx="45.5" cy="6.8" r="3.2" fill="#1b1b2f"/>
+          {/* Sparkle highlights */}
+          <circle cx="44.3" cy="5.6" r="1.1" fill="white"/>
+          <circle cx="46.8" cy="8.0" r="0.5" fill="white"/>
+          {/* Cheerful blush */}
+          <ellipse cx="40" cy="11.5" rx="3.5" ry="2.2" fill="#ff7da8" opacity="0.75" />
+        </>
+      ) : (
+        <>
+          {/* Dead eye crosses */}
+          <line x1="43" y1="4.5" x2="48" y2="9.5" stroke="#ff4444" strokeWidth="1.5" strokeLinecap="round"/>
+          <line x1="48" y1="4.5" x2="43" y2="9.5" stroke="#ff4444" strokeWidth="1.5" strokeLinecap="round"/>
+        </>
+      )}
       {/* Beak */}
       <path d="M53 7 L60 6 L53 10 Z" fill="#f4a535" stroke="#d4851a" strokeWidth="0.8"/>
-      {/* Feet */}
-      <line x1="22" y1="42" x2="18" y2="47" stroke="#f4a535" strokeWidth="2" strokeLinecap="round"/>
-      <line x1="18" y1="47" x2="13" y2="47" stroke="#f4a535" strokeWidth="2" strokeLinecap="round"/>
-      <line x1="18" y1="47" x2="16" y2="44" stroke="#f4a535" strokeWidth="2" strokeLinecap="round"/>
-      <line x1="32" y1="43" x2="28" y2="47" stroke="#f4a535" strokeWidth="2" strokeLinecap="round"/>
-      <line x1="28" y1="47" x2="23" y2="47" stroke="#f4a535" strokeWidth="2" strokeLinecap="round"/>
-      <line x1="28" y1="47" x2="26" y2="44" stroke="#f4a535" strokeWidth="2" strokeLinecap="round"/>
+      {/* Feet / Legs */}
+      <g className={`goose-leg leg-left ${moving && !dead ? 'animating' : ''}`}>
+        <line x1="22" y1="42" x2="18" y2="47" stroke="#f4a535" strokeWidth="2.5" strokeLinecap="round"/>
+        <line x1="18" y1="47" x2="13" y2="47" stroke="#f4a535" strokeWidth="2.5" strokeLinecap="round"/>
+        <line x1="18" y1="47" x2="16" y2="44" stroke="#f4a535" strokeWidth="2.5" strokeLinecap="round"/>
+      </g>
+      <g className={`goose-leg leg-right ${moving && !dead ? 'animating' : ''}`}>
+        <line x1="32" y1="43" x2="28" y2="47" stroke="#f4a535" strokeWidth="2.5" strokeLinecap="round"/>
+        <line x1="28" y1="47" x2="23" y2="47" stroke="#f4a535" strokeWidth="2.5" strokeLinecap="round"/>
+        <line x1="28" y1="47" x2="26" y2="44" stroke="#f4a535" strokeWidth="2.5" strokeLinecap="round"/>
+      </g>
     </svg>
   );
 }
@@ -330,7 +345,7 @@ function GooseSVG({ flapping, dead, facingLeft }) {
 function MiniGame() {
   const [playing, setPlaying] = useState(false);
   const [gameState, setGameState] = useState('playing'); // 'playing' | 'dead' | 'won'
-  const [pos, setPos] = useState({ x: 200, y: 0, facing: 1, flapping: false });
+  const [pos, setPos] = useState({ x: 200, y: 0, facing: 1, flapping: false, moving: false });
   const [goalPos, setGoalPos] = useState({ x: 0, y: 0 });
   const [traps, setTraps] = useState([]);
   const formUrl = "https://docs.google.com/forms/d/1pg0hfMb_7El4XgUT0VIyz4cAkuwMSN0mdFADnkpSD-Y/viewform";
@@ -511,7 +526,8 @@ function MiniGame() {
     setTraps(t);
     trapsRef.current = t;
     // Respawn character near viewport center
-    ref.current.x = window.scrollX + window.innerWidth / 2 - 30;
+    const vw = document.documentElement.clientWidth || window.innerWidth;
+    ref.current.x = window.scrollX + vw / 2 - 30;
     ref.current.y = window.scrollY + window.innerHeight / 2;
     ref.current.vx = 0;
     ref.current.vy = 0;
@@ -533,9 +549,10 @@ function MiniGame() {
     }
 
     // Spawn near current viewport center
+    const spawnVw = document.documentElement.clientWidth || window.innerWidth;
     ref.current = {
       ...ref.current,
-      x: window.scrollX + window.innerWidth / 2 - 30,
+      x: window.scrollX + spawnVw / 2 - 30,
       y: window.scrollY + window.innerHeight / 2,
       vx: 80, vy: 0, facing: 1, flapping: false, flapBuffer: 0,
     };
@@ -623,8 +640,9 @@ function MiniGame() {
       s.y = nextY;
 
       // wrap horizontally
+      const vw = document.documentElement.clientWidth || window.innerWidth;
       const vpLeft = window.scrollX;
-      const vpRight = window.scrollX + window.innerWidth;
+      const vpRight = window.scrollX + vw;
       if (s.x + W < vpLeft) s.x = vpRight;
       if (s.x > vpRight) s.x = vpLeft - W + 2;
 
@@ -671,6 +689,7 @@ function MiniGame() {
       setPos({
         x: s.x, y: s.y, facing: s.facing,
         flapping: s.flapping,
+        moving: Math.abs(s.vx) > 15,
       });
       tickerRef.current = requestAnimationFrame(step);
     };
@@ -820,6 +839,7 @@ function MiniGame() {
               flapping={pos.flapping}
               dead={gameState === 'dead'}
               facingLeft={pos.facing < 0}
+              moving={pos.moving}
             />
           </div>
 
@@ -865,6 +885,139 @@ function MiniGame() {
   );
 }
 
+// ============= GAMEPAD =============
+function Gamepad({ variant = "inline" }) {
+  const wrapRef = useRef(null);
+  const [pressed, setPressed] = useState({});
+  const [stick, setStick] = useState({ x: 0, y: 0 });
+  const [dpad, setDpad] = useState({ up: false, down: false, left: false, right: false });
+
+  // mouse-tracked sticks
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const onMove = (e) => {
+      const r = el.getBoundingClientRect();
+      const cx = r.left + r.width / 2;
+      const cy = r.top + r.height / 2;
+      const dx = (e.clientX - cx) / r.width;
+      const dy = (e.clientY - cy) / r.height;
+      const max = 0.18;
+      setStick({
+        x: Math.max(-max, Math.min(max, dx)) / max,
+        y: Math.max(-max, Math.min(max, dy)) / max,
+      });
+    };
+    window.addEventListener('mousemove', onMove);
+    return () => window.removeEventListener('mousemove', onMove);
+  }, []);
+
+  // keyboard press visual feedback
+  useEffect(() => {
+    const visual = {
+      'KeyW': 'b1', 'KeyS': 'b3', 'KeyA': 'b4', 'KeyD': 'b2',
+      'Space': 'b1', 'Enter': 'b2',
+    };
+    const onDown = (e) => {
+      if (e.code === 'ArrowUp') setDpad((d) => ({ ...d, up: true }));
+      if (e.code === 'ArrowDown') setDpad((d) => ({ ...d, down: true }));
+      if (e.code === 'ArrowLeft') setDpad((d) => ({ ...d, left: true }));
+      if (e.code === 'ArrowRight') setDpad((d) => ({ ...d, right: true }));
+      const id = visual[e.code];
+      if (id) setPressed((p) => ({ ...p, [id]: true }));
+    };
+    const onUp = (e) => {
+      if (e.code === 'ArrowUp') setDpad((d) => ({ ...d, up: false }));
+      if (e.code === 'ArrowDown') setDpad((d) => ({ ...d, down: false }));
+      if (e.code === 'ArrowLeft') setDpad((d) => ({ ...d, left: false }));
+      if (e.code === 'ArrowRight') setDpad((d) => ({ ...d, right: false }));
+      const id = visual[e.code];
+      if (id) setPressed((p) => ({ ...p, [id]: false }));
+    };
+    window.addEventListener('keydown', onDown);
+    window.addEventListener('keyup', onUp);
+    return () => {
+      window.removeEventListener('keydown', onDown);
+      window.removeEventListener('keyup', onUp);
+    };
+  }, []);
+
+  const press = (id, on) => {
+    setPressed((p) => ({ ...p, [id]: on }));
+  };
+  const dpadPress = (dir, on) => {
+    setDpad((d) => ({ ...d, [dir]: on }));
+  };
+
+  const knobStyle = () => ({
+    transform: `translate(${stick.x * 22}%, ${stick.y * 22}%)`,
+  });
+
+  const btnHandlers = (id) => ({
+    onMouseDown: () => press(id, true),
+    onMouseUp: () => press(id, false),
+    onMouseLeave: () => press(id, false),
+    onTouchStart: (e) => { e.preventDefault(); press(id, true); },
+    onTouchEnd: (e) => { e.preventDefault(); press(id, false); },
+  });
+  const dpadHandlers = (dir) => ({
+    onMouseDown: () => dpadPress(dir, true),
+    onMouseUp: () => dpadPress(dir, false),
+    onMouseLeave: () => dpadPress(dir, false),
+    onTouchStart: (e) => { e.preventDefault(); dpadPress(dir, true); },
+    onTouchEnd: (e) => { e.preventDefault(); dpadPress(dir, false); },
+  });
+
+  const dpadAny = dpad.up || dpad.down || dpad.left || dpad.right;
+
+  return (
+    <div className="gamepad-wrap" ref={wrapRef}>
+      <div className="gamepad">
+        <div className="gp-shoulder l"><span>LB</span></div>
+        <div className="gp-shoulder r"><span>RB</span></div>
+        <div className="gp-trigger l" />
+        <div className="gp-trigger r" />
+        <div className="gp-grip l" />
+        <div className="gp-grip r" />
+        <div className="gp-body">
+          <div className="gp-gloss" />
+          <div className="gp-screen">
+            <div className="gp-screen-inner">
+              <span className="gp-screen-pixel" />
+              <span className="gp-screen-pixel" />
+              <span className="gp-screen-pixel" />
+            </div>
+          </div>
+        </div>
+
+        <div className={`gp-dpad ${dpadAny ? 'active' : ''}`}>
+          <div className={`gp-dpad-arm v ${dpad.up ? 'pressed' : ''}`} {...dpadHandlers('up')} />
+          <div className={`gp-dpad-arm v down ${dpad.down ? 'pressed' : ''}`} {...dpadHandlers('down')} />
+          <div className={`gp-dpad-arm h ${dpad.left ? 'pressed' : ''}`} {...dpadHandlers('left')} />
+          <div className={`gp-dpad-arm h right ${dpad.right ? 'pressed' : ''}`} {...dpadHandlers('right')} />
+          <div className="gp-dpad-center" />
+        </div>
+
+        <div className="gp-center" />
+
+        <div className="gp-face">
+          <div className={`gp-btn b1 ${pressed.b1 ? 'pressed' : ''}`} {...btnHandlers('b1')}><span>W</span></div>
+          <div className={`gp-btn b2 ${pressed.b2 ? 'pressed' : ''}`} {...btnHandlers('b2')}><span>D</span></div>
+          <div className={`gp-btn b3 ${pressed.b3 ? 'pressed' : ''}`} {...btnHandlers('b3')}><span>S</span></div>
+          <div className={`gp-btn b4 ${pressed.b4 ? 'pressed' : ''}`} {...btnHandlers('b4')}><span>A</span></div>
+        </div>
+
+        <div className="gp-stick l">
+          <div className="gp-stick-knob" style={knobStyle()} />
+        </div>
+        <div className="gp-stick r">
+          <div className="gp-stick-knob" style={knobStyle()} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ============= HERO =============
 function Hero({ layout }) {
   return (
@@ -901,24 +1054,7 @@ function Hero({ layout }) {
           <div className="hero-art reveal">
             <span className="float-badge fb-1">Workshops · Speakers</span>
             <span className="float-badge fb-2">Game Jams</span>
-            <div className="hero-goose-deco">
-              <svg viewBox="0 0 120 96" width="120" height="96" style={{ filter: 'drop-shadow(0 0 20px rgba(255,233,0,0.4))' }} aria-hidden="true">
-                <ellipse cx="56" cy="60" rx="36" ry="26" fill="#f5f0e8" stroke="#c8b89a" strokeWidth="2"/>
-                <ellipse cx="52" cy="56" rx="28" ry="20" fill="#e8e0d0" stroke="#c8b89a" strokeWidth="1.5" style={{ transform: 'rotate(10deg)', transformOrigin: '52px 56px' }}/>
-                <path d="M76 44 Q100 28 92 16" stroke="#f5f0e8" strokeWidth="20" fill="none" strokeLinecap="round"/>
-                <path d="M76 44 Q100 28 92 16" stroke="#c8b89a" strokeWidth="2" fill="none" strokeLinecap="round"/>
-                <circle cx="92" cy="14" r="18" fill="#f5f0e8" stroke="#c8b89a" strokeWidth="2"/>
-                <circle cx="98" cy="10" r="4.5" fill="#1a1a2e"/>
-                <circle cx="100" cy="8" r="1.5" fill="white"/>
-                <path d="M107 14 L120 12 L107 20 Z" fill="#f4a535" stroke="#d4851a" strokeWidth="1"/>
-                <line x1="44" y1="84" x2="36" y2="94" stroke="#f4a535" strokeWidth="3" strokeLinecap="round"/>
-                <line x1="36" y1="94" x2="26" y2="94" stroke="#f4a535" strokeWidth="3" strokeLinecap="round"/>
-                <line x1="36" y1="94" x2="32" y2="88" stroke="#f4a535" strokeWidth="3" strokeLinecap="round"/>
-                <line x1="64" y1="86" x2="56" y2="94" stroke="#f4a535" strokeWidth="3" strokeLinecap="round"/>
-                <line x1="56" y1="94" x2="46" y2="94" stroke="#f4a535" strokeWidth="3" strokeLinecap="round"/>
-                <line x1="56" y1="94" x2="52" y2="88" stroke="#f4a535" strokeWidth="3" strokeLinecap="round"/>
-              </svg>
-            </div>
+            <Gamepad />
             <div className="cube c1" />
             <div className="cube c2" />
             <div className="cube c3" />
@@ -926,7 +1062,7 @@ function Hero({ layout }) {
             <div className="cube c5" />
             <div className="cube c6" />
             <div className="gp-hint">
-              🪿 Press <kbd>SPACE</kbd> to flap · <kbd>←/→</kbd> to move
+              <kbd>WASD</kbd> · <kbd>↑↓←→</kbd> · click buttons
             </div>
           </div>
         )}

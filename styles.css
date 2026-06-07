@@ -326,19 +326,17 @@ a { color: inherit; text-decoration: none; }
   pointer-events: none;
 }
 
-/* === hero goose decoration === */
-.hero-goose-deco {
+/* === poster-style translucent gamepad === */
+.gamepad-wrap {
   position: relative;
-  width: 72%;
+  width: 86%;
   z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: float-goose 4s ease-in-out infinite;
+  animation: float-pad 6s ease-in-out infinite;
+  filter: drop-shadow(0 40px 60px rgba(0, 0, 0, 0.45)) drop-shadow(0 0 30px rgba(155, 60, 255, 0.15));
 }
-@keyframes float-goose {
-  0%, 100% { transform: translateY(0) rotate(-3deg); }
-  50% { transform: translateY(-14px) rotate(2deg); }
+@keyframes float-pad {
+  0%, 100% { transform: translateY(0) rotate(-1.5deg); }
+  50% { transform: translateY(-8px) rotate(-0.5deg); }
 }
 .gamepad {
   position: relative;
@@ -2237,6 +2235,29 @@ a { color: inherit; text-decoration: none; }
   0% { transform: rotate(0deg); opacity: 1; }
   30% { transform: rotate(-20deg) translateY(-15px); opacity: 1; }
   100% { transform: rotate(720deg) translateY(40px) scale(0.3); opacity: 0.2; }
+}
+
+/* ─── GOOSE LEGS ANIMATION ─── */
+.goose-leg {
+  transform-origin: 22px 42px;
+  transition: transform 0.1s ease;
+}
+.goose-leg.leg-right {
+  transform-origin: 32px 43px;
+}
+.goose-leg.leg-left.animating {
+  animation: goose-walk-left 0.22s ease-in-out infinite alternate;
+}
+.goose-leg.leg-right.animating {
+  animation: goose-walk-right 0.22s ease-in-out infinite alternate;
+}
+@keyframes goose-walk-left {
+  0% { transform: rotate(-15deg) translateY(-0.5px); }
+  100% { transform: rotate(15deg) translateY(0.5px); }
+}
+@keyframes goose-walk-right {
+  0% { transform: rotate(15deg) translateY(0.5px); }
+  100% { transform: rotate(-15deg) translateY(-0.5px); }
 }
 
 /* ─── STAR CARRY (above player head) ─── */
