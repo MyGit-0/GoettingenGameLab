@@ -198,207 +198,51 @@ function Nav() {
   );
 }
 
-// ============= GAMEPAD =============
-function Gamepad({ variant = "inline" }) {
-  const wrapRef = useRef(null);
-  const [pressed, setPressed] = useState({});
-  const [stick, setStick] = useState({ x: 0, y: 0 });
-  const [dpad, setDpad] = useState({ up: false, down: false, left: false, right: false });
-  const [isFloating, setIsFloating] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+// ============= FLAPPY CONTROLS (simplified mobile controller) =============
+// Rendered inside the playing block, so it's always visible when game is active
+function FlappyControls() {
+  const [leftPressed, setLeftPressed] = useState(false);
+  const [rightPressed, setRightPressed] = useState(false);
+  const [flapPressed, setFlapPressed] = useState(false);
 
-  // Resize listener to activate gamepad overlay on mobile for the floating variant
-  useEffect(() => {
-    const handleCheck = () => {
-      const mobile = window.innerWidth <= 900;
-      setIsMobile(mobile);
-      if (variant === 'floating') {
-        setIsFloating(mobile);
-      } else {
-        setIsFloating(false);
-        setMobileOpen(false);
-      }
-    };
-    window.addEventListener('resize', handleCheck);
-    handleCheck();
-    return () => {
-      window.removeEventListener('resize', handleCheck);
-    };
-  }, [variant]);
-
-  // mouse-tracked sticks
-  useEffect(() => {
-    const el = wrapRef.current;
-    if (!el) return;
-    const onMove = (e) => {
-      const r = el.getBoundingClientRect();
-      const cx = r.left + r.width / 2;
-      const cy = r.top + r.height / 2;
-      const dx = (e.clientX - cx) / r.width;
-      const dy = (e.clientY - cy) / r.height;
-      const max = 0.18;
-      setStick({
-        x: Math.max(-max, Math.min(max, dx)) / max,
-        y: Math.max(-max, Math.min(max, dy)) / max,
-      });
-    };
-    window.addEventListener('mousemove', onMove);
-    return () => window.removeEventListener('mousemove', onMove);
-  }, []);
-
-  // keyboard → both visual press + game input
-  useEffect(() => {
-    const visual = {
-      'KeyW': 'b1', 'KeyS': 'b3', 'KeyA': 'b4', 'KeyD': 'b2',
-      'Space': 'b1', 'Enter': 'b2',
-    };
-    const onDown = (e) => {
-      // game input
-      if (e.code === 'ArrowLeft' || e.code === 'KeyA') setInput('left', true);
-      if (e.code === 'ArrowRight' || e.code === 'KeyD') setInput('right', true);
-      if (e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space') setInput('jump', true);
-      if (e.code === 'ArrowDown' || e.code === 'KeyS') setInput('down', true);
-      // visual feedback
-      if (e.code === 'ArrowUp') setDpad((d) => ({ ...d, up: true }));
-      if (e.code === 'ArrowDown') setDpad((d) => ({ ...d, down: true }));
-      if (e.code === 'ArrowLeft') setDpad((d) => ({ ...d, left: true }));
-      if (e.code === 'ArrowRight') setDpad((d) => ({ ...d, right: true }));
-      const id = visual[e.code];
-      if (id) setPressed((p) => ({ ...p, [id]: true }));
-    };
-    const onUp = (e) => {
-      if (e.code === 'ArrowLeft' || e.code === 'KeyA') setInput('left', false);
-      if (e.code === 'ArrowRight' || e.code === 'KeyD') setInput('right', false);
-      if (e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space') setInput('jump', false);
-      if (e.code === 'ArrowDown' || e.code === 'KeyS') setInput('down', false);
-      if (e.code === 'ArrowUp') setDpad((d) => ({ ...d, up: false }));
-      if (e.code === 'ArrowDown') setDpad((d) => ({ ...d, down: false }));
-      if (e.code === 'ArrowLeft') setDpad((d) => ({ ...d, left: false }));
-      if (e.code === 'ArrowRight') setDpad((d) => ({ ...d, right: false }));
-      const id = visual[e.code];
-      if (id) setPressed((p) => ({ ...p, [id]: false }));
-    };
-    window.addEventListener('keydown', onDown);
-    window.addEventListener('keyup', onUp);
-    return () => {
-      window.removeEventListener('keydown', onDown);
-      window.removeEventListener('keyup', onUp);
-    };
-  }, []);
-
-  // controller button press handlers (also drive game input)
-  const press = (id, on) => {
-    setPressed((p) => ({ ...p, [id]: on }));
-    if (id === 'b1') setInput('jump', on);
-    if (id === 'b2') setInput('right', on);
-    if (id === 'b3') setInput('down', on);
-    if (id === 'b4') setInput('left', on);
+  const flapHandlers = {
+    onMouseDown: () => { setFlapPressed(true); setInput('jump', true); },
+    onMouseUp: () => { setFlapPressed(false); setInput('jump', false); },
+    onMouseLeave: () => { setFlapPressed(false); setInput('jump', false); },
+    onTouchStart: (e) => { e.preventDefault(); setFlapPressed(true); setInput('jump', true); },
+    onTouchEnd: (e) => { e.preventDefault(); setFlapPressed(false); setInput('jump', false); },
+    onTouchCancel: (e) => { e.preventDefault(); setFlapPressed(false); setInput('jump', false); },
   };
-  const dpadPress = (dir, on) => {
-    setDpad((d) => ({ ...d, [dir]: on }));
-    if (dir === 'up') setInput('jump', on);
-    if (dir === 'down') setInput('down', on);
-    if (dir === 'left') setInput('left', on);
-    if (dir === 'right') setInput('right', on);
+  const leftHandlers = {
+    onMouseDown: () => { setLeftPressed(true); setInput('left', true); },
+    onMouseUp: () => { setLeftPressed(false); setInput('left', false); },
+    onMouseLeave: () => { setLeftPressed(false); setInput('left', false); },
+    onTouchStart: (e) => { e.preventDefault(); setLeftPressed(true); setInput('left', true); },
+    onTouchEnd: (e) => { e.preventDefault(); setLeftPressed(false); setInput('left', false); },
+    onTouchCancel: (e) => { e.preventDefault(); setLeftPressed(false); setInput('left', false); },
   };
-
-  const knobStyle = () => ({
-    transform: `translate(${stick.x * 22}%, ${stick.y * 22}%)`,
-  });
-
-  const btnHandlers = (id) => ({
-    onMouseDown: () => press(id, true),
-    onMouseUp: () => press(id, false),
-    onMouseLeave: () => press(id, false),
-    onTouchStart: (e) => { e.preventDefault(); press(id, true); },
-    onTouchEnd: (e) => { e.preventDefault(); press(id, false); },
-  });
-  const dpadHandlers = (dir) => ({
-    onMouseDown: () => dpadPress(dir, true),
-    onMouseUp: () => dpadPress(dir, false),
-    onMouseLeave: () => dpadPress(dir, false),
-    onTouchStart: (e) => { e.preventDefault(); dpadPress(dir, true); },
-    onTouchEnd: (e) => { e.preventDefault(); dpadPress(dir, false); },
-  });
-
-  const dpadAny = dpad.up || dpad.down || dpad.left || dpad.right;
-
-  const wrapClass = [
-    "gamepad-wrap",
-    isFloating ? "floating-mobile" : "",
-    mobileOpen ? "mobile-open" : ""
-  ].filter(Boolean).join(" ");
-
-  if (variant === 'floating' && !isMobile) return null;
+  const rightHandlers = {
+    onMouseDown: () => { setRightPressed(true); setInput('right', true); },
+    onMouseUp: () => { setRightPressed(false); setInput('right', false); },
+    onMouseLeave: () => { setRightPressed(false); setInput('right', false); },
+    onTouchStart: (e) => { e.preventDefault(); setRightPressed(true); setInput('right', true); },
+    onTouchEnd: (e) => { e.preventDefault(); setRightPressed(false); setInput('right', false); },
+    onTouchCancel: (e) => { e.preventDefault(); setRightPressed(false); setInput('right', false); },
+  };
 
   return (
-    <>
-      <div className={wrapClass} ref={wrapRef}>
-        <div className="gamepad">
-          {isFloating && (
-            <button 
-              className="gp-mobile-close" 
-              onClick={() => setMobileOpen(false)}
-              aria-label="Close controls"
-            >
-              ✕
-            </button>
-          )}
-          <div className="gp-shoulder l"><span>LB</span></div>
-          <div className="gp-shoulder r"><span>RB</span></div>
-          <div className="gp-trigger l" />
-          <div className="gp-trigger r" />
-          <div className="gp-grip l" />
-          <div className="gp-grip r" />
-          <div className="gp-body">
-            <div className="gp-gloss" />
-            <div className="gp-screen">
-              <div className="gp-screen-inner">
-                <span className="gp-screen-pixel" />
-                <span className="gp-screen-pixel" />
-                <span className="gp-screen-pixel" />
-              </div>
-            </div>
-          </div>
-
-          <div className={`gp-dpad ${dpadAny ? 'active' : ''}`}>
-            <div className={`gp-dpad-arm v ${dpad.up ? 'pressed' : ''}`} {...dpadHandlers('up')} />
-            <div className={`gp-dpad-arm v down ${dpad.down ? 'pressed' : ''}`} {...dpadHandlers('down')} />
-            <div className={`gp-dpad-arm h ${dpad.left ? 'pressed' : ''}`} {...dpadHandlers('left')} />
-            <div className={`gp-dpad-arm h right ${dpad.right ? 'pressed' : ''}`} {...dpadHandlers('right')} />
-            <div className="gp-dpad-center" />
-          </div>
-
-          <div className="gp-center" />
-
-          <div className="gp-face">
-            <div className={`gp-btn b1 ${pressed.b1 ? 'pressed' : ''}`} {...btnHandlers('b1')}><span>W</span></div>
-            <div className={`gp-btn b2 ${pressed.b2 ? 'pressed' : ''}`} {...btnHandlers('b2')}><span>D</span></div>
-            <div className={`gp-btn b3 ${pressed.b3 ? 'pressed' : ''}`} {...btnHandlers('b3')}><span>S</span></div>
-            <div className={`gp-btn b4 ${pressed.b4 ? 'pressed' : ''}`} {...btnHandlers('b4')}><span>A</span></div>
-          </div>
-
-          <div className="gp-stick l">
-            <div className="gp-stick-knob" style={knobStyle()} />
-          </div>
-          <div className="gp-stick r">
-            <div className="gp-stick-knob" style={knobStyle()} />
-          </div>
-        </div>
-      </div>
-
-      {isFloating && (
-        <button 
-          className={`gp-mobile-fab ${mobileOpen ? 'active' : ''}`}
-          onClick={() => setMobileOpen(!mobileOpen)}
-          aria-label="Toggle gamepad controls"
-        >
-          <span className="fab-icon">🎮</span>
-          <span className="fab-text">{mobileOpen ? "HIDE CONTROLS" : "CONTROLS"}</span>
-        </button>
-      )}
-    </>
+    <div className="flappy-controls" aria-label="Game controls">
+      <button className={`flap-dir-btn flap-left${leftPressed ? ' pressed' : ''}`} {...leftHandlers} aria-label="Move left">
+        ◀
+      </button>
+      <button className={`flap-main-btn${flapPressed ? ' pressed' : ''}`} {...flapHandlers} aria-label="Flap wings">
+        <span className="flap-goose-icon">🪿</span>
+        <span className="flap-label">TAP TO FLY</span>
+      </button>
+      <button className={`flap-dir-btn flap-right${rightPressed ? ' pressed' : ''}`} {...rightHandlers} aria-label="Move right">
+        ▶
+      </button>
+    </div>
   );
 }
 
@@ -436,42 +280,69 @@ function computeTraps() {
   return traps;
 }
 
-// Pick a star position: random section, random horizontal offset
-function computeStarPos() {
-  const secs = ['#about', '#jam', '#prize', '#workshops', '#speakers', '#team'];
-  const pick = secs[Math.floor(Math.random() * secs.length)];
-  const el = document.querySelector(pick);
-  if (!el) return { x: 400, y: 200 };
-  const r = el.getBoundingClientRect();
-  return {
-    x: r.left + window.scrollX + r.width * (0.15 + Math.random() * 0.7),
-    y: r.top + window.scrollY + r.height * 0.4,
-  };
+
+
+// Goose SVG character
+function GooseSVG({ flapping, dead, facingLeft }) {
+  return (
+    <svg
+      viewBox="0 0 60 48"
+      width="60" height="48"
+      style={{ transform: facingLeft ? 'scaleX(-1)' : 'scaleX(1)', overflow: 'visible' }}
+      aria-hidden="true"
+    >
+      {/* Body */}
+      <ellipse cx="28" cy="30" rx="18" ry="13" fill="#f5f0e8" stroke="#c8b89a" strokeWidth="1.5"/>
+      {/* Wing - animated when flapping */}
+      <ellipse
+        cx="26" cy="28"
+        rx="14" ry={flapping ? 7 : 10}
+        fill="#e8e0d0"
+        stroke="#c8b89a"
+        strokeWidth="1"
+        style={{ transformOrigin: '26px 28px', transform: flapping ? 'rotate(-25deg)' : 'rotate(10deg)', transition: 'transform 0.08s, ry 0.08s' }}
+      />
+      {/* Neck */}
+      <path d="M38 22 Q50 14 46 8" stroke="#f5f0e8" strokeWidth="10" fill="none" strokeLinecap="round"/>
+      <path d="M38 22 Q50 14 46 8" stroke="#c8b89a" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+      {/* Head */}
+      <circle cx="46" cy="7" r="9" fill="#f5f0e8" stroke="#c8b89a" strokeWidth="1.5"/>
+      {/* Eye */}
+      <circle cx={dead ? 48 : 49} cy="5" r="2.2" fill="#1a1a2e"/>
+      <circle cx="50" cy="4" r="0.8" fill="white"/>
+      {dead && <>
+        <line x1="47" y1="3" x2="49" y2="5" stroke="#ff4444" strokeWidth="1.5"/>
+        <line x1="49" y1="3" x2="47" y2="5" stroke="#ff4444" strokeWidth="1.5"/>
+      </>}
+      {/* Beak */}
+      <path d="M53 7 L60 6 L53 10 Z" fill="#f4a535" stroke="#d4851a" strokeWidth="0.8"/>
+      {/* Feet */}
+      <line x1="22" y1="42" x2="18" y2="47" stroke="#f4a535" strokeWidth="2" strokeLinecap="round"/>
+      <line x1="18" y1="47" x2="13" y2="47" stroke="#f4a535" strokeWidth="2" strokeLinecap="round"/>
+      <line x1="18" y1="47" x2="16" y2="44" stroke="#f4a535" strokeWidth="2" strokeLinecap="round"/>
+      <line x1="32" y1="43" x2="28" y2="47" stroke="#f4a535" strokeWidth="2" strokeLinecap="round"/>
+      <line x1="28" y1="47" x2="23" y2="47" stroke="#f4a535" strokeWidth="2" strokeLinecap="round"/>
+      <line x1="28" y1="47" x2="26" y2="44" stroke="#f4a535" strokeWidth="2" strokeLinecap="round"/>
+    </svg>
+  );
 }
 
 function MiniGame() {
   const [playing, setPlaying] = useState(false);
   const [gameState, setGameState] = useState('playing'); // 'playing' | 'dead' | 'won'
-  const [pos, setPos] = useState({ x: 200, y: 0, facing: 1, moving: false, onGround: false });
-  const [hasStar, setHasStar] = useState(false);
-  const [starCollected, setStarCollected] = useState(false);
-  const [starPos, setStarPos] = useState({ x: 0, y: 0 });
+  const [pos, setPos] = useState({ x: 200, y: 0, facing: 1, flapping: false });
   const [goalPos, setGoalPos] = useState({ x: 0, y: 0 });
   const [traps, setTraps] = useState([]);
+  const formUrl = "https://docs.google.com/forms/d/1pg0hfMb_7El4XgUT0VIyz4cAkuwMSN0mdFADnkpSD-Y/viewform";
 
   const ref = useRef({
     x: 200, y: 100, vx: 0, vy: 0,
-    onGround: false, facing: 1,
-    jumpConsumed: true,
-    coyoteTimer: 0,
-    jumpBuffer: 0,
+    facing: 1, flapping: false,
+    flapBuffer: 0,
   });
   const platformsRef = useRef([]);
   const trapsRef = useRef([]);
-  const starRef = useRef({ x: 0, y: 0 });
   const goalRef = useRef({ x: 0, y: 0 });
-  const hasStarRef = useRef(false);
-  const starCollectedRef = useRef(false);
   const gameStateRef = useRef('playing');
   const tickerRef = useRef(null);
   const playingRef = useRef(false);
@@ -479,8 +350,6 @@ function MiniGame() {
 
   // keep refs in sync
   useEffect(() => { playingRef.current = playing; }, [playing]);
-  useEffect(() => { hasStarRef.current = hasStar; }, [hasStar]);
-  useEffect(() => { starCollectedRef.current = starCollected; }, [starCollected]);
   useEffect(() => { gameStateRef.current = gameState; }, [gameState]);
 
   // listen for the secret key / button
@@ -508,28 +377,43 @@ function MiniGame() {
     return () => window.removeEventListener('keydown', prevent);
   }, [playing]);
 
-  // track jump-press edge
+  // keyboard input (WASD / arrows / Space for flap)
+  useEffect(() => {
+    const onDown = (e) => {
+      if (e.code === 'ArrowLeft' || e.code === 'KeyA') setInput('left', true);
+      if (e.code === 'ArrowRight' || e.code === 'KeyD') setInput('right', true);
+      if (e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space') setInput('jump', true);
+    };
+    const onUp = (e) => {
+      if (e.code === 'ArrowLeft' || e.code === 'KeyA') setInput('left', false);
+      if (e.code === 'ArrowRight' || e.code === 'KeyD') setInput('right', false);
+      if (e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space') setInput('jump', false);
+    };
+    window.addEventListener('keydown', onDown);
+    window.addEventListener('keyup', onUp);
+    return () => {
+      window.removeEventListener('keydown', onDown);
+      window.removeEventListener('keyup', onUp);
+    };
+  }, []);
+
+  // track flap edge (each press = one flap impulse)
   useEffect(() => {
     const onInput = (key, val) => {
-      if (key === 'jump') {
-        if (val) {
-          ref.current.jumpConsumed = false;
-          ref.current.jumpBuffer = 8;
-        } else {
-          ref.current.jumpConsumed = true;
-        }
+      if (key === 'jump' && val) {
+        ref.current.flapBuffer = 1;
       }
     };
     inputListeners.add(onInput);
     return () => inputListeners.delete(onInput);
   }, []);
 
-  // gather platforms once playing starts
+  // gather platforms (text/UI elements as blockers) once playing starts
   useEffect(() => {
     if (!playing) return;
     const collect = () => {
-      if (cameraScrolling.current) return; // skip while we're auto-scrolling
-      const sel = '[data-platform], .play-toggle, .tape, .btn, .tag, .stat, .workshop-num, .cd-cell, .sp-card, .nav-cta, .cta-big, .jam-prize, .section-title, .gp-hint, .footer-bot, .partner-logo, .nav, .eyebrow, .hero-title, .hero-sub, .hero-tags, .kicker, .workshop-title, .workshop-output, .faq-q, .prize-stamp, .prize-kicker, .ticket, .countdown, .jam-eyebrow, .jam-title, .apply-title, .apply-frame-bar, .apply-meta-row, .footer-col h5, .logo, .float-badge, .tab, .speaker-avatar, .play-banner, .about-copy p, .workshop-desc, .jam-desc, .prize-sub, .prize-title, .sp-featured-bio, .sp-featured-name, .sp-featured-role, .sp-featured-company, .sp-featured-card, .team-card, .team-name, .team-role, .team-avatar, .team-photo-wrap, .faq-a p, .apply-sub, .apply-meta, .apply-fallback, .imprint-panel, .imprint-panel h3, .imprint-panel p, .ws-goals-list li, .ws-todo-list li, .ws-section-meta h4, .consent-inner, .footer-brand p, .footer-col a, .cd-num, .stat-num, .stat-label, .hero-meta, .prize-stamps, .ticket-body, .ticket-stub, .sp-pill, .sp-linkedin, .team-area-pill, .team-photo-caption, .prize-copy, .prize-title-big';
+      if (cameraScrolling.current) return;
+      const sel = '[data-platform], .play-toggle, .tape, .btn, .tag, .stat, .workshop-num, .cd-cell, .sp-card, .nav-cta, .cta-big, .jam-prize, .section-title, .footer-bot, .partner-logo, .nav, .eyebrow, .hero-title, .hero-sub, .hero-tags, .kicker, .workshop-title, .workshop-output, .faq-q, .prize-stamp, .prize-kicker, .ticket, .countdown, .jam-eyebrow, .jam-title, .apply-title, .apply-frame-bar, .apply-meta-row, .footer-col h5, .logo, .float-badge, .tab, .speaker-avatar, .play-banner, .about-copy p, .workshop-desc, .jam-desc, .prize-sub, .prize-title, .sp-featured-bio, .sp-featured-name, .sp-featured-role, .sp-featured-company, .sp-featured-card, .team-card, .team-name, .team-role, .team-avatar, .team-photo-wrap, .faq-a p, .apply-sub, .apply-meta, .apply-fallback, .imprint-panel, .imprint-panel h3, .imprint-panel p, .ws-goals-list li, .ws-todo-list li, .ws-section-meta h4, .footer-brand p, .footer-col a, .cd-num, .stat-num, .stat-label, .hero-meta, .prize-stamps, .ticket-body, .ticket-stub, .sp-pill, .sp-linkedin, .team-area-pill, .team-photo-caption, .prize-copy, .prize-title-big';
       const nodes = document.querySelectorAll(sel);
       const list = [];
       nodes.forEach((n) => {
@@ -541,12 +425,6 @@ function MiniGame() {
           w: r.width,
           h: r.height,
         });
-      });
-      list.push({
-        x: 0,
-        y: document.documentElement.scrollHeight - 4,
-        w: document.documentElement.scrollWidth,
-        h: 4,
       });
       platformsRef.current = list;
     };
@@ -618,86 +496,67 @@ function MiniGame() {
   // restart game helper
   const restartGame = useCallback(() => {
     setGameState('playing');
-    setHasStar(false);
-    setStarCollected(false);
-    hasStarRef.current = false;
-    starCollectedRef.current = false;
     gameStateRef.current = 'playing';
-    // Recompute star position
-    const sp = computeStarPos();
-    setStarPos(sp);
-    starRef.current = sp;
+    // Recompute goal
+    const applyBtn = document.querySelector('#apply .apply-fallback') || document.querySelector('#apply .apply-title') || document.querySelector('#apply');
+    if (applyBtn) {
+      const r = applyBtn.getBoundingClientRect();
+      const gx = r.left + window.scrollX + r.width / 2 - 30;
+      const gy = r.top + window.scrollY - 60;
+      setGoalPos({ x: gx, y: gy });
+      goalRef.current = { x: gx, y: gy };
+    }
     // Reset traps
     const t = computeTraps();
     setTraps(t);
     trapsRef.current = t;
-    // Respawn character
-    const playBtn = document.querySelector('.play-toggle');
-    let spawnX = window.scrollX + window.innerWidth / 2 - 12;
-    let spawnY = window.scrollY + 80;
-    if (playBtn) {
-      const r = playBtn.getBoundingClientRect();
-      spawnX = r.left + window.scrollX + r.width / 2 - 13;
-      spawnY = r.top + window.scrollY - 32;
-    }
-    ref.current.x = spawnX;
-    ref.current.y = spawnY;
+    // Respawn character near viewport center
+    ref.current.x = window.scrollX + window.innerWidth / 2 - 30;
+    ref.current.y = window.scrollY + window.innerHeight / 2;
     ref.current.vx = 0;
     ref.current.vy = 0;
-    ref.current.onGround = false;
+    ref.current.flapping = false;
   }, []);
 
-  // physics loop
+  // physics loop — Flappy Bird style
   useEffect(() => {
     if (!playing) return;
-    // spawn on top of the PLAY button
-    const playBtn = document.querySelector('.play-toggle');
-    let spawnX = window.scrollX + window.innerWidth / 2 - 12;
-    let spawnY = window.scrollY + 80;
-    if (playBtn) {
-      const r = playBtn.getBoundingClientRect();
-      spawnX = r.left + window.scrollX + r.width / 2 - 13;
-      spawnY = r.top + window.scrollY - 32;
-      // goal position is near the play button
-      const gx = r.left + window.scrollX + r.width / 2 - 20;
-      const gy = r.top + window.scrollY - 48;
+
+    // Locate apply button goal
+    const applyBtn = document.querySelector('#apply .apply-fallback') || document.querySelector('#apply .apply-title') || document.querySelector('#apply');
+    if (applyBtn) {
+      const r = applyBtn.getBoundingClientRect();
+      const gx = r.left + window.scrollX + r.width / 2 - 30;
+      const gy = r.top + window.scrollY - 60;
       setGoalPos({ x: gx, y: gy });
       goalRef.current = { x: gx, y: gy };
     }
+
+    // Spawn near current viewport center
     ref.current = {
       ...ref.current,
-      x: spawnX,
-      y: spawnY,
-      vx: 0, vy: 0, onGround: false, facing: 1,
-      jumpConsumed: true, coyoteTimer: 0, jumpBuffer: 0,
+      x: window.scrollX + window.innerWidth / 2 - 30,
+      y: window.scrollY + window.innerHeight / 2,
+      vx: 80, vy: 0, facing: 1, flapping: false, flapBuffer: 0,
     };
 
-    // Initialize star, traps, and game state
+    // Init traps
     setGameState('playing');
     gameStateRef.current = 'playing';
-    setHasStar(false);
-    setStarCollected(false);
-    hasStarRef.current = false;
-    starCollectedRef.current = false;
-
-    // Delay star/trap init slightly so layout is settled
     setTimeout(() => {
-      const sp = computeStarPos();
-      setStarPos(sp);
-      starRef.current = sp;
       const t = computeTraps();
       setTraps(t);
       trapsRef.current = t;
     }, 200);
 
     let last = performance.now();
-    const W = 26, H = 28;
-    const GRAVITY = 1800;
-    const ACCEL = 2400;
-    const MAX_SPEED = 340;
-    const FRICTION = 1800;
-    const JUMP = 1050;
-    const COYOTE_FRAMES = 6;
+    const W = 60, H = 48; // goose dimensions
+    const GRAVITY = 900;      // downward pull
+    const FLAP = -680;        // upward impulse per tap
+    const ACCEL = 1800;       // horizontal
+    const MAX_SPEED_X = 320;
+    const FRICTION = 1400;
+    let flapAnim = 0;
 
     const step = (t) => {
       const dt = Math.min(0.033, (t - last) / 1000);
@@ -717,8 +576,8 @@ function MiniGame() {
 
       if (inputDir !== 0) {
         s.vx += inputDir * ACCEL * dt;
-        if (s.vx > MAX_SPEED) s.vx = MAX_SPEED;
-        if (s.vx < -MAX_SPEED) s.vx = -MAX_SPEED;
+        if (s.vx > MAX_SPEED_X) s.vx = MAX_SPEED_X;
+        if (s.vx < -MAX_SPEED_X) s.vx = -MAX_SPEED_X;
         s.facing = inputDir;
       } else {
         const sign = Math.sign(s.vx);
@@ -728,54 +587,38 @@ function MiniGame() {
         }
       }
 
-      // ─── coyote time & jump buffer ───
-      if (s.onGround) {
-        s.coyoteTimer = COYOTE_FRAMES;
-      } else {
-        if (s.coyoteTimer > 0) s.coyoteTimer--;
+      // ─── flap (tap = impulse up) ───
+      if (s.flapBuffer > 0) {
+        s.vy = FLAP;
+        s.flapBuffer = 0;
+        flapAnim = 6; // frames of wing-up animation
       }
-      if (s.jumpBuffer > 0) s.jumpBuffer--;
-
-      // ─── jump ───
-      const canJump = s.coyoteTimer > 0;
-      const wantsJump = (gameInput.jump && !s.jumpConsumed) || s.jumpBuffer > 0;
-      if (wantsJump && canJump) {
-        s.vy = -JUMP;
-        s.onGround = false;
-        s.jumpConsumed = true;
-        s.coyoteTimer = 0;
-        s.jumpBuffer = 0;
-      }
-
-      if (!gameInput.jump && s.vy < -JUMP * 0.4) {
-        s.vy = -JUMP * 0.4;
-      }
+      if (flapAnim > 0) flapAnim--;
+      s.flapping = flapAnim > 0;
 
       // ─── gravity ───
       s.vy += GRAVITY * dt;
-      if (s.vy > 1200) s.vy = 1200;
+      if (s.vy > 900) s.vy = 900;
 
       // ─── candidate move ───
       const nextX = s.x + s.vx * dt;
       let nextY = s.y + s.vy * dt;
 
-      // ─── platform collision ───
-      let onGround = false;
+      // ─── platform collision (letters/UI as blockers) ───
+      // Goose collides with top of platform elements (can land on them)
       const feetPrev = s.y + H;
       const feetNext = nextY + H;
-      const cx1 = nextX + 4;
-      const cx2 = nextX + W - 4;
+      const cx1 = nextX + 8;
+      const cx2 = nextX + W - 8;
       for (const p of platformsRef.current) {
         if (cx2 < p.x || cx1 > p.x + p.w) continue;
         const top = p.y;
         if (s.vy >= 0 && feetPrev <= top + 8 && feetNext >= top) {
           nextY = top - H;
           s.vy = 0;
-          onGround = true;
           break;
         }
       }
-      s.onGround = onGround;
       s.x = nextX;
       s.y = nextY;
 
@@ -791,22 +634,21 @@ function MiniGame() {
         if (s.vy < 0) s.vy = 0;
       }
 
-      // invisible floor
+      // invisible floor (page bottom)
       const docBottom = document.documentElement.scrollHeight - H;
       if (s.y > docBottom) {
         s.y = docBottom;
         s.vy = 0;
-        s.onGround = true;
       }
 
       // ─── trap collision ───
-      const playerRect = { x: s.x + 4, y: s.y + 4, w: W - 8, h: H - 4 };
+      const gooseRect = { x: s.x + 8, y: s.y + 10, w: W - 16, h: H - 16 };
       for (const trap of trapsRef.current) {
         if (
-          playerRect.x < trap.x + trap.w &&
-          playerRect.x + playerRect.w > trap.x &&
-          playerRect.y < trap.y + trap.h &&
-          playerRect.y + playerRect.h > trap.y
+          gooseRect.x < trap.x + trap.w &&
+          gooseRect.x + gooseRect.w > trap.x &&
+          gooseRect.y < trap.y + trap.h &&
+          gooseRect.y + gooseRect.h > trap.y
         ) {
           gameStateRef.current = 'dead';
           setGameState('dead');
@@ -816,34 +658,19 @@ function MiniGame() {
         }
       }
 
-      // ─── star pickup ───
-      if (!hasStarRef.current && !starCollectedRef.current) {
-        const sp = starRef.current;
-        const dist = Math.hypot((s.x + W / 2) - sp.x, (s.y + H / 2) - sp.y);
-        if (dist < 40) {
-          hasStarRef.current = true;
-          setHasStar(true);
-        }
-      }
-
-      // ─── goal check (return star to goal) ───
-      if (hasStarRef.current && !starCollectedRef.current) {
-        const g = goalRef.current;
-        const dist = Math.hypot((s.x + W / 2) - (g.x + 20), (s.y + H / 2) - (g.y + 20));
-        if (dist < 50) {
-          starCollectedRef.current = true;
-          setStarCollected(true);
-          gameStateRef.current = 'won';
-          setGameState('won');
-          s.vx = 0;
-          s.vy = 0;
-        }
+      // ─── goal check (reach the APPLY button area) ───
+      const g = goalRef.current;
+      const dist = Math.hypot((s.x + W / 2) - (g.x + 30), (s.y + H / 2) - (g.y + 30));
+      if (dist < 70) {
+        gameStateRef.current = 'won';
+        setGameState('won');
+        s.vx = 0;
+        s.vy = 0;
       }
 
       setPos({
         x: s.x, y: s.y, facing: s.facing,
-        moving: Math.abs(s.vx) > 20,
-        onGround: s.onGround,
+        flapping: s.flapping,
       });
       tickerRef.current = requestAnimationFrame(step);
     };
@@ -851,7 +678,6 @@ function MiniGame() {
     return () => cancelAnimationFrame(tickerRef.current);
   }, [playing]);
 
-  const isRunning = pos.moving && pos.onGround;
   const [burstStars, setBurstStars] = useState([]);
   const [showBubble, setShowBubble] = useState(false);
 
@@ -867,7 +693,7 @@ function MiniGame() {
     return () => inputListeners.delete(dismiss);
   }, [showBubble]);
 
-  // spawn star particles when play starts
+  // spawn feather particles when play starts
   const spawnStars = useCallback(() => {
     const playBtn = document.querySelector('.play-toggle');
     if (!playBtn) return;
@@ -884,7 +710,7 @@ function MiniGame() {
         dx: Math.cos(angle) * speed,
         dy: Math.sin(angle) * speed - 40,
         size,
-        hue: [340, 50, 180, 280][i % 4],
+        hue: [50, 60, 40, 55][i % 4],
       };
     });
     setBurstStars(newStars);
@@ -892,15 +718,31 @@ function MiniGame() {
   }, []);
 
   // Compute HUD quest text
-  const questText = gameState === 'dead' ? '💀 GAME OVER'
-    : gameState === 'won' ? '🏆 YOU WIN!'
-    : hasStar ? '↩ BRING ◆ BACK TO HOME!'
-    : '◆ FIND THE GEM!';
+  const questText = gameState === 'dead' ? '💀 HONK! GAME OVER'
+    : gameState === 'won' ? '🪿 THE GOOSE APPLIED!'
+    : '🪿 FLY TO THE APPLY BUTTON!';
+
+  // Sync playing state to data attribute (for FlappyControls)
+  useEffect(() => {
+    const btn = document.querySelector('.play-toggle');
+    if (btn) btn.dataset.playing = playing ? 'true' : 'false';
+  }, [playing]);
+
+  // On win: redirect to form after brief delay
+  useEffect(() => {
+    if (gameState === 'won') {
+      const timer = setTimeout(() => {
+        window.open(formUrl, '_blank', 'noopener');
+      }, 2200);
+      return () => clearTimeout(timer);
+    }
+  }, [gameState]);
 
   return (
     <>
       <button
         className="play-toggle"
+        data-playing={playing}
         onClick={() => {
           setPlaying((p) => {
             if (!p) {
@@ -914,7 +756,7 @@ function MiniGame() {
         }}
         title="Toggle minigame (P)"
       >
-        {playing ? '■ STOP' : '▶ PLAY'}
+        {playing ? '■ STOP' : '🪿 PLAY'}
       </button>
       {burstStars.map((s) => (
         <span
@@ -928,7 +770,7 @@ function MiniGame() {
             '--size': s.size + 'px',
             '--hue': s.hue,
           }}
-        >★</span>
+        >🪶</span>
       ))}
       {playing && (
         <>
@@ -951,59 +793,39 @@ function MiniGame() {
             </div>
           ))}
 
-          {/* ── STAR (collectible) ── */}
-          {!hasStar && !starCollected && (
-            <div
-              className="game-star-pickup game-target-gem"
-              style={{
-                left: starPos.x + 'px',
-                top: starPos.y + 'px',
-              }}
-            >
-              ◆
-            </div>
-          )}
-
-          {/* ── GOAL (home base) ── */}
+          {/* ── GOAL (APPLY button beacon) ── */}
           <div
-            className={`game-goal${hasStar ? ' goal-active' : ''}${starCollected ? ' goal-done' : ''}`}
+            className="game-goal goal-active"
             style={{
               left: goalPos.x + 'px',
               top: goalPos.y + 'px',
             }}
           >
-            <span className="goal-flag">⚑</span>
-            <span className="goal-label">{starCollected ? 'DONE!' : 'HOME'}</span>
+            <span className="goal-flag">📋</span>
+            <span className="goal-label">APPLY!</span>
           </div>
 
-          {/* ── PLAYER ── */}
+          {/* ── GOOSE PLAYER ── */}
           <div
-            className={`player${isRunning ? ' running' : ''}${!pos.onGround ? ' airborne' : ''}${gameState === 'dead' ? ' dead' : ''}`}
+            className={`player goose-player${gameState === 'dead' ? ' dead' : ''}`}
             style={{
               left: pos.x + 'px',
               top: pos.y + 'px',
-              transform: `scaleX(${pos.facing})`,
             }}
           >
             {showBubble && (
-              <div className="player-bubble">Hi, I'm Bibidy!</div>
+              <div className="player-bubble">HONK! Fly me to Apply!</div>
             )}
-            {hasStar && !starCollected && (
-              <div className="player-star-carry game-carry-gem">◆</div>
-            )}
-            <div className="player-body">
-              <div className="player-eye l" />
-              <div className="player-eye r" />
-              <div className="player-mouth" />
-            </div>
-            <div className="player-legs">
-              <div /><div />
-            </div>
+            <GooseSVG
+              flapping={pos.flapping}
+              dead={gameState === 'dead'}
+              facingLeft={pos.facing < 0}
+            />
           </div>
 
           {/* ── PLAY BANNER with quest ── */}
           <div className="play-banner">
-            ♛ PLAY MODE · ←/→ move · ↑/SPACE jump · ⚠ avoid spikes!
+            🪿 GOOSE MODE · ←/→ move · SPACE/TAP flap · ⚠ avoid spikes!
           </div>
 
           {/* ── QUEST HUD ── */}
@@ -1017,7 +839,7 @@ function MiniGame() {
               <div className="game-overlay-box">
                 <div className="game-overlay-icon">💀</div>
                 <h3 className="game-overlay-title">GAME OVER</h3>
-                <p className="game-overlay-sub">Bibidy hit a spike!</p>
+                <p className="game-overlay-sub">The goose hit a spike! HONK!</p>
                 <button className="game-overlay-btn" onClick={restartGame}>↻ TRY AGAIN</button>
               </div>
             </div>
@@ -1027,13 +849,16 @@ function MiniGame() {
           {gameState === 'won' && (
             <div className="game-overlay win-overlay">
               <div className="game-overlay-box">
-                <div className="game-overlay-icon">🏆</div>
-                <h3 className="game-overlay-title">YOU WIN!</h3>
-                <p className="game-overlay-sub">Bibidy brought the star home!</p>
-                <button className="game-overlay-btn" onClick={restartGame}>★ PLAY AGAIN</button>
+                <div className="game-overlay-icon">🪿</div>
+                <h3 className="game-overlay-title">HONK HONK!</h3>
+                <p className="game-overlay-sub">The Göttingen Goose reached the Apply button!<br/>Opening the form…</p>
+                <button className="game-overlay-btn" onClick={() => window.open(formUrl, '_blank', 'noopener')}>📋 APPLY NOW →</button>
               </div>
             </div>
           )}
+
+          {/* ── MOBILE FLAPPY CONTROLS ── */}
+          <FlappyControls />
         </>
       )}
     </>
@@ -1076,7 +901,24 @@ function Hero({ layout }) {
           <div className="hero-art reveal">
             <span className="float-badge fb-1">Workshops · Speakers</span>
             <span className="float-badge fb-2">Game Jams</span>
-            <Gamepad />
+            <div className="hero-goose-deco">
+              <svg viewBox="0 0 120 96" width="120" height="96" style={{ filter: 'drop-shadow(0 0 20px rgba(255,233,0,0.4))' }} aria-hidden="true">
+                <ellipse cx="56" cy="60" rx="36" ry="26" fill="#f5f0e8" stroke="#c8b89a" strokeWidth="2"/>
+                <ellipse cx="52" cy="56" rx="28" ry="20" fill="#e8e0d0" stroke="#c8b89a" strokeWidth="1.5" style={{ transform: 'rotate(10deg)', transformOrigin: '52px 56px' }}/>
+                <path d="M76 44 Q100 28 92 16" stroke="#f5f0e8" strokeWidth="20" fill="none" strokeLinecap="round"/>
+                <path d="M76 44 Q100 28 92 16" stroke="#c8b89a" strokeWidth="2" fill="none" strokeLinecap="round"/>
+                <circle cx="92" cy="14" r="18" fill="#f5f0e8" stroke="#c8b89a" strokeWidth="2"/>
+                <circle cx="98" cy="10" r="4.5" fill="#1a1a2e"/>
+                <circle cx="100" cy="8" r="1.5" fill="white"/>
+                <path d="M107 14 L120 12 L107 20 Z" fill="#f4a535" stroke="#d4851a" strokeWidth="1"/>
+                <line x1="44" y1="84" x2="36" y2="94" stroke="#f4a535" strokeWidth="3" strokeLinecap="round"/>
+                <line x1="36" y1="94" x2="26" y2="94" stroke="#f4a535" strokeWidth="3" strokeLinecap="round"/>
+                <line x1="36" y1="94" x2="32" y2="88" stroke="#f4a535" strokeWidth="3" strokeLinecap="round"/>
+                <line x1="64" y1="86" x2="56" y2="94" stroke="#f4a535" strokeWidth="3" strokeLinecap="round"/>
+                <line x1="56" y1="94" x2="46" y2="94" stroke="#f4a535" strokeWidth="3" strokeLinecap="round"/>
+                <line x1="56" y1="94" x2="52" y2="88" stroke="#f4a535" strokeWidth="3" strokeLinecap="round"/>
+              </svg>
+            </div>
             <div className="cube c1" />
             <div className="cube c2" />
             <div className="cube c3" />
@@ -1084,7 +926,7 @@ function Hero({ layout }) {
             <div className="cube c5" />
             <div className="cube c6" />
             <div className="gp-hint">
-              <kbd>WASD</kbd> · <kbd>↑↓←→</kbd> · click buttons
+              🪿 Press <kbd>SPACE</kbd> to flap · <kbd>←/→</kbd> to move
             </div>
           </div>
         )}
@@ -1821,7 +1663,7 @@ function App() {
       <Imprint />
       <Footer onOpenPrivacy={openPrivacy} />
       <MiniGame />
-      <Gamepad variant="floating" />
+
       <CookieConsent onOpenPrivacy={openPrivacy} />
       <PrivacyModal open={privacyOpen} onClose={closePrivacy} />
       <TweaksPanel title="Tweaks">

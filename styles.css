@@ -326,17 +326,19 @@ a { color: inherit; text-decoration: none; }
   pointer-events: none;
 }
 
-/* === poster-style translucent gamepad === */
-.gamepad-wrap {
+/* === hero goose decoration === */
+.hero-goose-deco {
   position: relative;
-  width: 86%;
+  width: 72%;
   z-index: 2;
-  animation: float-pad 6s ease-in-out infinite;
-  filter: drop-shadow(0 40px 60px rgba(0, 0, 0, 0.45)) drop-shadow(0 0 30px rgba(155, 60, 255, 0.15));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: float-goose 4s ease-in-out infinite;
 }
-@keyframes float-pad {
-  0%, 100% { transform: translateY(0) rotate(-1.5deg); }
-  50% { transform: translateY(-8px) rotate(-0.5deg); }
+@keyframes float-goose {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-14px) rotate(2deg); }
 }
 .gamepad {
   position: relative;
@@ -2214,92 +2216,27 @@ a { color: inherit; text-decoration: none; }
   100% { transform: translateX(-50%) scale(1); opacity: 1; }
 }
 
+/* Old pixel player styles removed — character is now SVG goose */
+
+/* ─── GOOSE PLAYER ─── */
 .player {
   position: absolute;
-  width: 26px; height: 28px;
+  width: 60px; height: 48px;
   z-index: 8500;
   pointer-events: none;
-  image-rendering: pixelated;
   transition: none;
 }
-.player-body {
-  position: absolute;
-  inset: 0 0 8px 0;
-  background: linear-gradient(180deg, var(--magenta) 0%, #ff7a3c 100%);
-  border: 2px solid #0b0210;
-  border-radius: 3px;
-  box-shadow: 0 0 12px rgba(255,45,146,0.7), inset 0 -3px 0 rgba(0,0,0,0.3);
+.goose-player {
+  filter: drop-shadow(0 0 8px rgba(255, 233, 0, 0.5));
 }
-.player-eye {
-  position: absolute;
-  width: 4px; height: 4px;
-  background: #0b0210;
-  top: 6px;
-  box-shadow: 1px 0 0 var(--ink), 0 -1px 0 var(--ink), -1px 0 0 var(--ink);
+.goose-player.dead {
+  animation: goose-die 0.7s ease-out forwards;
+  filter: drop-shadow(0 0 12px rgba(255, 45, 61, 0.8));
 }
-.player-eye.l { left: 5px; }
-.player-eye.r { right: 5px; }
-.player-mouth {
-  position: absolute;
-  width: 8px; height: 2px;
-  background: #0b0210;
-  bottom: 5px;
-  left: 7px;
-}
-.player-legs {
-  position: absolute;
-  bottom: 0; left: 0;
-  width: 100%;
-  height: 8px;
-  display: flex;
-  justify-content: space-around;
-}
-.player-legs > div {
-  width: 6px;
-  height: 100%;
-  background: #0b0210;
-  /* legs are static by default */
-}
-/* only animate legs when running */
-.player.running .player-legs > div {
-  animation: legs 0.2s steps(2) infinite;
-}
-.player.running .player-legs > div:nth-child(2) { animation-delay: 0.1s; }
-/* squash when airborne */
-.player.airborne .player-body {
-  transform: scaleX(0.9) scaleY(1.08);
-}
-.player.airborne .player-legs > div {
-  transform: translateY(2px);
-}
-@keyframes legs {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-3px); }
-}
-
-/* ─── PLAYER DEATH STATE ─── */
-.player.dead {
-  animation: player-die 0.6s ease-out forwards;
-  pointer-events: none;
-}
-.player.dead .player-body {
-  background: linear-gradient(180deg, #555 0%, #333 100%) !important;
-  box-shadow: 0 0 12px rgba(255, 0, 0, 0.6) !important;
-}
-.player.dead .player-eye {
-  background: #ff2d2d;
-  box-shadow: 0 0 4px #ff2d2d;
-}
-.player.dead .player-mouth {
-  width: 10px;
-  height: 3px;
-  border-radius: 0 0 4px 4px;
-  background: #ff2d2d;
-}
-@keyframes player-die {
-  0% { transform: scaleX(var(--facing, 1)) rotate(0deg); opacity: 1; }
-  40% { transform: scaleX(var(--facing, 1)) rotate(-15deg) translateY(-20px); opacity: 1; }
-  100% { transform: scaleX(var(--facing, 1)) rotate(720deg) translateY(30px) scale(0.4); opacity: 0.3; }
+@keyframes goose-die {
+  0% { transform: rotate(0deg); opacity: 1; }
+  30% { transform: rotate(-20deg) translateY(-15px); opacity: 1; }
+  100% { transform: rotate(720deg) translateY(40px) scale(0.3); opacity: 0.2; }
 }
 
 /* ─── STAR CARRY (above player head) ─── */
@@ -2646,6 +2583,98 @@ a { color: inherit; text-decoration: none; }
   box-shadow: 6px 6px 0 currentColor;
 }
 
+
+/* ============= FLAPPY CONTROLS (simplified mobile controller) ============= */
+.flappy-controls {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9200;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  pointer-events: auto;
+  /* Only show on touch/small screens; desktop users use keyboard */
+}
+
+/* Hide on desktop (keyboard is primary) */
+@media (hover: hover) and (pointer: fine) {
+  .flappy-controls {
+    display: none;
+  }
+}
+
+.flap-main-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 140px;
+  height: 90px;
+  background: linear-gradient(135deg, var(--magenta), var(--purple));
+  border: 3px solid rgba(255,255,255,0.3);
+  border-radius: 18px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  box-shadow: 0 6px 0 rgba(0,0,0,0.4), 0 0 20px rgba(255,45,146,0.4);
+  transition: transform 0.08s, box-shadow 0.08s;
+  position: relative;
+  overflow: hidden;
+}
+.flap-main-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 60%);
+  border-radius: inherit;
+  pointer-events: none;
+}
+.flap-main-btn.pressed {
+  transform: scale(0.93) translateY(3px);
+  box-shadow: 0 2px 0 rgba(0,0,0,0.4), 0 0 10px rgba(255,45,146,0.3);
+}
+.flap-goose-icon {
+  font-size: 36px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+.flap-label {
+  font-family: var(--pixel);
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.9);
+  text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+
+.flap-dir-btn {
+  width: 68px;
+  height: 68px;
+  background: rgba(11, 2, 16, 0.75);
+  border: 2.5px solid rgba(255,45,146,0.5);
+  border-radius: 14px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  font-size: 22px;
+  color: var(--magenta);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 0 rgba(0,0,0,0.4), 0 0 10px rgba(255,45,146,0.2);
+  transition: transform 0.08s, box-shadow 0.08s, background 0.08s;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.flap-dir-btn.pressed {
+  transform: scale(0.9) translateY(2px);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.4);
+  background: rgba(255,45,146,0.25);
+}
 
 /* ============= theme palettes (tweak-driven) ============= */
 .theme-cyan {
