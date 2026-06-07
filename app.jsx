@@ -144,7 +144,7 @@ const FAQS = [
   { q: "Who is this for?", a: "Any student at the University of Göttingen — any degree, any year, any background." },
   { q: "Do I have to attend everything?", a: "No. Pick the parts that interest you. Materials will be on Stud.IP / eCampus afterwards." },
   { q: "What is the 48-hour challenge?", a: "A short collaborative game-jam at the end. Teams ship a small playable game, with mentor checkpoints and a public showcase." },
-  { q: "When does it run?", a: "Coming June 2026. Sign up for the early-interest list to get the schedule first." },
+  { q: "When does it run?", a: "Coming July 2026. Sign up for the early-interest list to get the schedule first." },
 ];
 
 // ============= REVEAL HOOK =============
@@ -1025,7 +1025,7 @@ function Hero({ layout }) {
       <div className="hero-bg" />
       <div className="shell hero-grid">
         <div className="hero-copy reveal">
-          <span className="kicker"><span className="dot" /> JUNE 2026 · GÖTTINGEN</span>
+          <span className="kicker"><span className="dot" /> JULY 2026 · GÖTTINGEN</span>
           <h1 className="hero-title">
             <span aria-hidden="true" className="echo echo-2"><span className="hero-title-top">GÖTTINGEN</span>GAME STUDIO</span>
             <span aria-hidden="true" className="echo"><span className="hero-title-top">GÖTTINGEN</span>GAME STUDIO</span>
@@ -1043,7 +1043,7 @@ function Hero({ layout }) {
             <span className="tag outline">BEGINNER-FRIENDLY</span>
           </div>
           <div className="hero-meta">
-            <span className="tape">★ JUNE 27, 2026</span>
+            <span className="tape">★ JULY 4, 2026</span>
             <div className="cta-row">
               <a href="#apply" className="btn btn-primary" data-platform="1">APPLY NOW <span>→</span></a>
               <a href="#workshops" className="btn btn-ghost">WHAT'S INSIDE</a>
@@ -1175,7 +1175,7 @@ function Workshops() {
 function Jam() {
   const [time, setTime] = useState({ d: 0, h: 0, m: 0, s: 0 });
   useEffect(() => {
-    const target = new Date('2026-06-27T09:00:00').getTime();
+    const target = new Date('2026-07-04T09:00:00').getTime();
     const tick = () => {
       const diff = Math.max(0, target - Date.now());
       const d = Math.floor(diff / 86400000);
@@ -1201,7 +1201,7 @@ function Jam() {
         </div>
         <div className="reveal">
           <div style={{ fontFamily: 'var(--pixel)', fontSize: '10px', color: '#0b0210', marginBottom: '14px', letterSpacing: '1px' }}>
-            // T-MINUS UNTIL JUNE 27, 2026
+            // T-MINUS UNTIL JULY 4, 2026
           </div>
           <div className="countdown">
             <div className="cd-cell"><div className="cd-num">{String(time.d).padStart(3, '0')}</div><div className="cd-label">days</div></div>
