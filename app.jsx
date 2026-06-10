@@ -236,7 +236,7 @@ function FlappyControls() {
         ◀
       </button>
       <button className={`flap-main-btn${flapPressed ? ' pressed' : ''}`} {...flapHandlers} aria-label="Flap wings">
-        <span className="flap-goose-icon">🪿</span>
+        <span className="flap-bibidy-icon">⭐</span>
         <span className="flap-label">TAP TO FLY</span>
       </button>
       <button className={`flap-dir-btn flap-right${rightPressed ? ' pressed' : ''}`} {...rightHandlers} aria-label="Move right">
@@ -282,70 +282,11 @@ function computeTraps() {
 
 
 
-// Goose SVG character
-function GooseSVG({ flapping, dead, facingLeft, moving }) {
-  return (
-    <svg
-      viewBox="0 0 60 48"
-      width="60" height="48"
-      style={{ transform: facingLeft ? 'scaleX(-1)' : 'scaleX(1)', overflow: 'visible' }}
-      aria-hidden="true"
-    >
-      {/* Body */}
-      <ellipse cx="28" cy="30" rx="18" ry="13" fill="#f5f0e8" stroke="#c8b89a" strokeWidth="1.5"/>
-      {/* Wing - animated when flapping */}
-      <ellipse
-        cx="26" cy="28"
-        rx="14" ry={flapping ? 7 : 10}
-        fill="#e8e0d0"
-        stroke="#c8b89a"
-        strokeWidth="1"
-        style={{ transformOrigin: '26px 28px', transform: flapping ? 'rotate(-25deg)' : 'rotate(10deg)', transition: 'transform 0.08s, ry 0.08s' }}
-      />
-      {/* Neck */}
-      <path d="M38 22 Q50 14 46 8" stroke="#f5f0e8" strokeWidth="10" fill="none" strokeLinecap="round"/>
-      <path d="M38 22 Q50 14 46 8" stroke="#c8b89a" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-      {/* Head */}
-      <circle cx="46" cy="7" r="9" fill="#f5f0e8" stroke="#c8b89a" strokeWidth="1.5"/>
-      {/* Eye */}
-      {!dead ? (
-        <>
-          {/* Big kawaii eye */}
-          <circle cx="45.5" cy="6.8" r="3.2" fill="#1b1b2f"/>
-          {/* Sparkle highlights */}
-          <circle cx="44.3" cy="5.6" r="1.1" fill="white"/>
-          <circle cx="46.8" cy="8.0" r="0.5" fill="white"/>
-          {/* Cheerful blush */}
-          <ellipse cx="40" cy="11.5" rx="3.5" ry="2.2" fill="#ff7da8" opacity="0.75" />
-        </>
-      ) : (
-        <>
-          {/* Dead eye crosses */}
-          <line x1="43" y1="4.5" x2="48" y2="9.5" stroke="#ff4444" strokeWidth="1.5" strokeLinecap="round"/>
-          <line x1="48" y1="4.5" x2="43" y2="9.5" stroke="#ff4444" strokeWidth="1.5" strokeLinecap="round"/>
-        </>
-      )}
-      {/* Beak */}
-      <path d="M53 7 L60 6 L53 10 Z" fill="#f4a535" stroke="#d4851a" strokeWidth="0.8"/>
-      {/* Feet / Legs */}
-      <g className={`goose-leg leg-left ${moving && !dead ? 'animating' : ''}`}>
-        <line x1="22" y1="42" x2="18" y2="47" stroke="#f4a535" strokeWidth="2.5" strokeLinecap="round"/>
-        <line x1="18" y1="47" x2="13" y2="47" stroke="#f4a535" strokeWidth="2.5" strokeLinecap="round"/>
-        <line x1="18" y1="47" x2="16" y2="44" stroke="#f4a535" strokeWidth="2.5" strokeLinecap="round"/>
-      </g>
-      <g className={`goose-leg leg-right ${moving && !dead ? 'animating' : ''}`}>
-        <line x1="32" y1="43" x2="28" y2="47" stroke="#f4a535" strokeWidth="2.5" strokeLinecap="round"/>
-        <line x1="28" y1="47" x2="23" y2="47" stroke="#f4a535" strokeWidth="2.5" strokeLinecap="round"/>
-        <line x1="28" y1="47" x2="26" y2="44" stroke="#f4a535" strokeWidth="2.5" strokeLinecap="round"/>
-      </g>
-    </svg>
-  );
-}
-
+// Bibidy character replaced the Goose character.
 function MiniGame() {
   const [playing, setPlaying] = useState(false);
   const [gameState, setGameState] = useState('playing'); // 'playing' | 'dead' | 'won'
-  const [pos, setPos] = useState({ x: 200, y: 0, facing: 1, flapping: false, moving: false });
+  const [pos, setPos] = useState({ x: 200, y: 0, facing: 1, flapping: false, moving: false, onGround: false });
   const [goalPos, setGoalPos] = useState({ x: 0, y: 0 });
   const [traps, setTraps] = useState([]);
   const formUrl = "https://docs.google.com/forms/d/1pg0hfMb_7El4XgUT0VIyz4cAkuwMSN0mdFADnkpSD-Y/viewform";
@@ -527,7 +468,7 @@ function MiniGame() {
     trapsRef.current = t;
     // Respawn character near viewport center
     const vw = document.documentElement.clientWidth || window.innerWidth;
-    ref.current.x = window.scrollX + vw / 2 - 30;
+    ref.current.x = window.scrollX + vw / 2 - 13;
     ref.current.y = window.scrollY + window.innerHeight / 2;
     ref.current.vx = 0;
     ref.current.vy = 0;
@@ -552,7 +493,7 @@ function MiniGame() {
     const spawnVw = document.documentElement.clientWidth || window.innerWidth;
     ref.current = {
       ...ref.current,
-      x: window.scrollX + spawnVw / 2 - 30,
+      x: window.scrollX + spawnVw / 2 - 13,
       y: window.scrollY + window.innerHeight / 2,
       vx: 80, vy: 0, facing: 1, flapping: false, flapBuffer: 0,
     };
@@ -567,7 +508,7 @@ function MiniGame() {
     }, 200);
 
     let last = performance.now();
-    const W = 60, H = 48; // goose dimensions
+    const W = 26, H = 28; // Bibidy dimensions
     const GRAVITY = 900;      // downward pull
     const FLAP = -680;        // upward impulse per tap
     const ACCEL = 1800;       // horizontal
@@ -622,17 +563,18 @@ function MiniGame() {
       let nextY = s.y + s.vy * dt;
 
       // ─── platform collision (letters/UI as blockers) ───
-      // Goose collides with top of platform elements (can land on them)
+      let onGround = false;
       const feetPrev = s.y + H;
       const feetNext = nextY + H;
-      const cx1 = nextX + 8;
-      const cx2 = nextX + W - 8;
+      const cx1 = nextX + 3;
+      const cx2 = nextX + W - 3;
       for (const p of platformsRef.current) {
         if (cx2 < p.x || cx1 > p.x + p.w) continue;
         const top = p.y;
         if (s.vy >= 0 && feetPrev <= top + 8 && feetNext >= top) {
           nextY = top - H;
           s.vy = 0;
+          onGround = true;
           break;
         }
       }
@@ -657,16 +599,17 @@ function MiniGame() {
       if (s.y > docBottom) {
         s.y = docBottom;
         s.vy = 0;
+        onGround = true;
       }
 
       // ─── trap collision ───
-      const gooseRect = { x: s.x + 8, y: s.y + 10, w: W - 16, h: H - 16 };
+      const playerRect = { x: s.x + 4, y: s.y + 4, w: W - 8, h: H - 4 };
       for (const trap of trapsRef.current) {
         if (
-          gooseRect.x < trap.x + trap.w &&
-          gooseRect.x + gooseRect.w > trap.x &&
-          gooseRect.y < trap.y + trap.h &&
-          gooseRect.y + gooseRect.h > trap.y
+          playerRect.x < trap.x + trap.w &&
+          playerRect.x + playerRect.w > trap.x &&
+          playerRect.y < trap.y + trap.h &&
+          playerRect.y + playerRect.h > trap.y
         ) {
           gameStateRef.current = 'dead';
           setGameState('dead');
@@ -679,7 +622,7 @@ function MiniGame() {
       // ─── goal check (reach the APPLY button area) ───
       const g = goalRef.current;
       const dist = Math.hypot((s.x + W / 2) - (g.x + 30), (s.y + H / 2) - (g.y + 30));
-      if (dist < 70) {
+      if (dist < 55) {
         gameStateRef.current = 'won';
         setGameState('won');
         s.vx = 0;
@@ -690,6 +633,7 @@ function MiniGame() {
         x: s.x, y: s.y, facing: s.facing,
         flapping: s.flapping,
         moving: Math.abs(s.vx) > 15,
+        onGround,
       });
       tickerRef.current = requestAnimationFrame(step);
     };
@@ -712,7 +656,7 @@ function MiniGame() {
     return () => inputListeners.delete(dismiss);
   }, [showBubble]);
 
-  // spawn feather particles when play starts
+  // spawn star particles when play starts
   const spawnStars = useCallback(() => {
     const playBtn = document.querySelector('.play-toggle');
     if (!playBtn) return;
@@ -729,7 +673,7 @@ function MiniGame() {
         dx: Math.cos(angle) * speed,
         dy: Math.sin(angle) * speed - 40,
         size,
-        hue: [50, 60, 40, 55][i % 4],
+        hue: [340, 50, 180, 280][i % 4],
       };
     });
     setBurstStars(newStars);
@@ -737,9 +681,9 @@ function MiniGame() {
   }, []);
 
   // Compute HUD quest text
-  const questText = gameState === 'dead' ? '💀 HONK! GAME OVER'
-    : gameState === 'won' ? '🪿 THE GOOSE APPLIED!'
-    : '🪿 FLY TO THE APPLY BUTTON!';
+  const questText = gameState === 'dead' ? '💀 GAME OVER'
+    : gameState === 'won' ? '★ BIBIDY APPLIED!'
+    : '★ FLY BIBIDY TO THE APPLY BUTTON!';
 
   // Sync playing state to data attribute (for FlappyControls)
   useEffect(() => {
@@ -775,7 +719,7 @@ function MiniGame() {
         }}
         title="Toggle minigame (P)"
       >
-        {playing ? '■ STOP' : '🪿 PLAY'}
+        {playing ? '■ STOP' : '★ PLAY'}
       </button>
       {burstStars.map((s) => (
         <span
@@ -789,7 +733,7 @@ function MiniGame() {
             '--size': s.size + 'px',
             '--hue': s.hue,
           }}
-        >🪶</span>
+        >★</span>
       ))}
       {playing && (
         <>
@@ -824,28 +768,33 @@ function MiniGame() {
             <span className="goal-label">APPLY!</span>
           </div>
 
-          {/* ── GOOSE PLAYER ── */}
+          {/* ── BIBIDY PLAYER ── */}
           <div
-            className={`player goose-player${gameState === 'dead' ? ' dead' : ''}`}
+            className={`player${pos.moving && pos.onGround ? ' running' : ''}${!pos.onGround ? ' airborne' : ''}${gameState === 'dead' ? ' dead' : ''}`}
             style={{
               left: pos.x + 'px',
               top: pos.y + 'px',
+              transform: `scaleX(${pos.facing})`,
+              '--facing': pos.facing,
             }}
           >
             {showBubble && (
-              <div className="player-bubble">HONK! Fly me to Apply!</div>
+              <div className="player-bubble">Hi, I'm Bibidy!</div>
             )}
-            <GooseSVG
-              flapping={pos.flapping}
-              dead={gameState === 'dead'}
-              facingLeft={pos.facing < 0}
-              moving={pos.moving}
-            />
+            <div className="player-body">
+              <div className="player-eye l" />
+              <div className="player-eye r" />
+              <div className="player-mouth" />
+            </div>
+            <div className="player-legs">
+              <div />
+              <div />
+            </div>
           </div>
 
           {/* ── PLAY BANNER with quest ── */}
           <div className="play-banner">
-            🪿 GOOSE MODE · ←/→ move · SPACE/TAP flap · ⚠ avoid spikes!
+            ★ BIBIDY MODE · ←/→ move · SPACE/TAP flap · ⚠ avoid spikes!
           </div>
 
           {/* ── QUEST HUD ── */}
@@ -859,7 +808,7 @@ function MiniGame() {
               <div className="game-overlay-box">
                 <div className="game-overlay-icon">💀</div>
                 <h3 className="game-overlay-title">GAME OVER</h3>
-                <p className="game-overlay-sub">The goose hit a spike! HONK!</p>
+                <p className="game-overlay-sub">Bibidy hit a spike!</p>
                 <button className="game-overlay-btn" onClick={restartGame}>↻ TRY AGAIN</button>
               </div>
             </div>
@@ -869,9 +818,9 @@ function MiniGame() {
           {gameState === 'won' && (
             <div className="game-overlay win-overlay">
               <div className="game-overlay-box">
-                <div className="game-overlay-icon">🪿</div>
-                <h3 className="game-overlay-title">HONK HONK!</h3>
-                <p className="game-overlay-sub">The Göttingen Goose reached the Apply button!<br/>Opening the form…</p>
+                <div className="game-overlay-icon">🏆</div>
+                <h3 className="game-overlay-title">YOU WIN!</h3>
+                <p className="game-overlay-sub">Bibidy reached the Apply button!<br/>Opening the form…</p>
                 <button className="game-overlay-btn" onClick={() => window.open(formUrl, '_blank', 'noopener')}>📋 APPLY NOW →</button>
               </div>
             </div>

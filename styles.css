@@ -2214,50 +2214,94 @@ a { color: inherit; text-decoration: none; }
   100% { transform: translateX(-50%) scale(1); opacity: 1; }
 }
 
-/* Old pixel player styles removed — character is now SVG goose */
-
-/* ─── GOOSE PLAYER ─── */
+/* ─── BIBIDY PLAYER ─── */
 .player {
   position: absolute;
-  width: 60px; height: 48px;
+  width: 26px; height: 28px;
   z-index: 8500;
   pointer-events: none;
+  image-rendering: pixelated;
   transition: none;
+  filter: drop-shadow(0 0 8px rgba(255, 45, 146, 0.4));
 }
-.goose-player {
-  filter: drop-shadow(0 0 8px rgba(255, 233, 0, 0.5));
+.player-body {
+  position: absolute;
+  inset: 0 0 8px 0;
+  background: linear-gradient(180deg, var(--magenta) 0%, #ff7a3c 100%);
+  border: 2px solid #0b0210;
+  border-radius: 3px;
+  box-shadow: 0 0 12px rgba(255,45,146,0.7), inset 0 -3px 0 rgba(0,0,0,0.3);
 }
-.goose-player.dead {
-  animation: goose-die 0.7s ease-out forwards;
-  filter: drop-shadow(0 0 12px rgba(255, 45, 61, 0.8));
+.player-eye {
+  position: absolute;
+  width: 4px; height: 4px;
+  background: #0b0210;
+  top: 6px;
+  box-shadow: 1px 0 0 var(--ink), 0 -1px 0 var(--ink), -1px 0 0 var(--ink);
 }
-@keyframes goose-die {
-  0% { transform: rotate(0deg); opacity: 1; }
-  30% { transform: rotate(-20deg) translateY(-15px); opacity: 1; }
-  100% { transform: rotate(720deg) translateY(40px) scale(0.3); opacity: 0.2; }
+.player-eye.l { left: 5px; }
+.player-eye.r { right: 5px; }
+.player-mouth {
+  position: absolute;
+  width: 8px; height: 2px;
+  background: #0b0210;
+  bottom: 5px;
+  left: 7px;
+}
+.player-legs {
+  position: absolute;
+  bottom: 0; left: 0;
+  width: 100%;
+  height: 8px;
+  display: flex;
+  justify-content: space-around;
+}
+.player-legs > div {
+  width: 6px;
+  height: 100%;
+  background: #0b0210;
 }
 
-/* ─── GOOSE LEGS ANIMATION ─── */
-.goose-leg {
-  transform-origin: 22px 42px;
-  transition: transform 0.1s ease;
+/* only animate legs when running */
+.player.running .player-legs > div {
+  animation: legs 0.2s steps(2) infinite;
 }
-.goose-leg.leg-right {
-  transform-origin: 32px 43px;
+.player.running .player-legs > div:nth-child(2) { animation-delay: 0.1s; }
+/* squash when airborne */
+.player.airborne .player-body {
+  transform: scaleX(0.9) scaleY(1.08);
 }
-.goose-leg.leg-left.animating {
-  animation: goose-walk-left 0.22s ease-in-out infinite alternate;
+.player.airborne .player-legs > div {
+  transform: translateY(2px);
 }
-.goose-leg.leg-right.animating {
-  animation: goose-walk-right 0.22s ease-in-out infinite alternate;
+@keyframes legs {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
 }
-@keyframes goose-walk-left {
-  0% { transform: rotate(-15deg) translateY(-0.5px); }
-  100% { transform: rotate(15deg) translateY(0.5px); }
+
+/* ─── PLAYER DEATH STATE ─── */
+.player.dead {
+  animation: player-die 0.6s ease-out forwards;
+  pointer-events: none;
 }
-@keyframes goose-walk-right {
-  0% { transform: rotate(15deg) translateY(0.5px); }
-  100% { transform: rotate(-15deg) translateY(-0.5px); }
+.player.dead .player-body {
+  background: linear-gradient(180deg, #555 0%, #333 100%) !important;
+  box-shadow: 0 0 12px rgba(255, 0, 0, 0.6) !important;
+}
+.player.dead .player-eye {
+  background: #ff2d2d;
+  box-shadow: 0 0 4px #ff2d2d;
+}
+.player.dead .player-mouth {
+  width: 10px;
+  height: 3px;
+  border-radius: 0 0 4px 4px;
+  background: #ff2d2d;
+}
+@keyframes player-die {
+  0% { transform: scaleX(var(--facing, 1)) rotate(0deg); opacity: 1; }
+  40% { transform: scaleX(var(--facing, 1)) rotate(-15deg) translateY(-20px); opacity: 1; }
+  100% { transform: scaleX(var(--facing, 1)) rotate(720deg) translateY(30px) scale(0.4); opacity: 0.3; }
 }
 
 /* ─── STAR CARRY (above player head) ─── */
