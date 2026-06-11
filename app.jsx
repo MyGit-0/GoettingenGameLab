@@ -289,7 +289,7 @@ function MiniGame() {
   const [pos, setPos] = useState({ x: 200, y: 0, facing: 1, flapping: false, moving: false, onGround: false });
   const [goalPos, setGoalPos] = useState({ x: 0, y: 0 });
   const [traps, setTraps] = useState([]);
-  const formUrl = "https://docs.google.com/forms/d/1pg0hfMb_7El4XgUT0VIyz4cAkuwMSN0mdFADnkpSD-Y/viewform";
+  const formUrl = "https://docs.google.com/forms/d/e/1FAIpQLSfFSANvROvFYagEuqwcjHEjATxAvvJqENudfALgFkoAuJKK9A/viewform";
 
   const ref = useRef({
     x: 200, y: 100, vx: 0, vy: 0,
@@ -1362,8 +1362,8 @@ function FAQ() {
 }
 
 // ============= APPLY (embedded form) =============
-const FORM_EMBED = "https://docs.google.com/forms/d/e/1FAIpQLSc__placeholder/viewform?embedded=true";
-const FORM_FALLBACK = "https://docs.google.com/forms/d/1pg0hfMb_7El4XgUT0VIyz4cAkuwMSN0mdFADnkpSD-Y/viewform";
+const FORM_EMBED = "https://docs.google.com/forms/d/e/1FAIpQLSfFSANvROvFYagEuqwcjHEjATxAvvJqENudfALgFkoAuJKK9A/viewform?embedded=true";
+const FORM_FALLBACK = "https://docs.google.com/forms/d/e/1FAIpQLSfFSANvROvFYagEuqwcjHEjATxAvvJqENudfALgFkoAuJKK9A/viewform";
 
 function Apply({ formUrl }) {
   return (
@@ -1709,7 +1709,7 @@ function Footer({ onOpenPrivacy }) {
 }
 
 // ============= APP =============
-const FORM_URL = "https://docs.google.com/forms/d/1pg0hfMb_7El4XgUT0VIyz4cAkuwMSN0mdFADnkpSD-Y/viewform";
+const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfFSANvROvFYagEuqwcjHEjATxAvvJqENudfALgFkoAuJKK9A/viewform";
 
 const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "theme": "magenta",
