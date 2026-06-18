@@ -96,7 +96,7 @@ a { color: inherit; text-decoration: none; }
   box-shadow: 4px 4px 0 var(--purple);
 }
 .logo-mark-img {
-  height: 32px;
+  height: 44px;
   width: auto;
   display: block;
   object-fit: contain;
