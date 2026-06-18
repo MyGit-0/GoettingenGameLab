@@ -179,8 +179,8 @@ function Nav() {
     <nav className="nav">
       <div className="shell nav-inner">
         <a href="#top" className="logo">
-          <img src="pics/symbol-square.png" alt="Göttingen Game Studio mark" className="logo-mark-img" />
           <img src="pics/logo-full.png" alt="Göttingen Game Studio" className="logo-full-img" />
+          <img src="pics/impact.png" alt="Göttingen Game Studio mark" className="logo-mark-img" />
         </a>
         <div className="nav-links">
           <a href="#about">about</a>
