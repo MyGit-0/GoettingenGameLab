@@ -1689,6 +1689,23 @@ function Footer({ onOpenPrivacy }) {
             <a href="#">Discord</a>
             <a href="#">Stud.IP</a>
             <a href="mailto:admin@goegame.de">Email</a>
+            <a href="https://www.instagram.com/goegame.de/" target="_blank" rel="noopener" className="footer-instagram">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style={{ marginRight: '6px', verticalAlign: 'middle', flexShrink: 0 }}>
+                <defs>
+                  <radialGradient id="ig-grad" cx="30%" cy="107%" r="150%">
+                    <stop offset="0%" stopColor="#fdf497"/>
+                    <stop offset="10%" stopColor="#fdf497"/>
+                    <stop offset="50%" stopColor="#fd5949"/>
+                    <stop offset="68%" stopColor="#d6249f"/>
+                    <stop offset="100%" stopColor="#285AEB"/>
+                  </radialGradient>
+                </defs>
+                <rect x="2" y="2" width="20" height="20" rx="5" ry="5" fill="url(#ig-grad)"/>
+                <circle cx="12" cy="12" r="4.5" fill="none" stroke="white" strokeWidth="1.8"/>
+                <circle cx="17.2" cy="6.8" r="1.2" fill="white"/>
+              </svg>
+              Instagram
+            </a>
           </div>
           <div className="footer-col">
             <h5>LEGAL</h5>
