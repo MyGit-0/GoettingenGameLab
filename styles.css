@@ -1106,16 +1106,19 @@ a { color: inherit; text-decoration: none; }
 }
 .sp-featured-photo {
   width: 200px;
-  aspect-ratio: 1;
+  height: 280px;
   overflow: hidden;
   position: relative;
   border-right: 1.5px solid var(--line);
+  flex-shrink: 0;
 }
 .sp-featured-photo img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center top;
   display: block;
+  background: #0e0118;
   filter: grayscale(0.15) contrast(1.05);
   transition: filter .3s, transform .3s;
 }
@@ -2844,7 +2847,7 @@ a { color: inherit; text-decoration: none; }
   }
   .sp-featured-photo {
     width: 100%;
-    aspect-ratio: 4 / 3;
+    height: 320px;
     border-right: none;
     border-bottom: 1.5px solid var(--line);
   }
