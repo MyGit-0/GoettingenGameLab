@@ -1126,6 +1126,19 @@ a { color: inherit; text-decoration: none; }
   filter: grayscale(0) contrast(1.1);
   transform: scale(1.04);
 }
+.sp-avatar-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--purple), var(--cyan));
+  font-size: 56px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -2px;
+  font-family: var(--font);
+}
 .sp-featured-info {
   padding: 24px 28px;
   display: flex;

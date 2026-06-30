@@ -85,6 +85,36 @@ const SPEAKERS = [
     w: "01",
     confirmed: true
   },
+  {
+    name: "Georg Baier",
+    role: "Senior Partnership Specialist",
+    company: "remote control productions",
+    bio: "11+ years at one of Europe's leading game co-development networks. Scouts and onboards studios worldwide, negotiates complex partnership deals, and has served as a guest lecturer at the University of Television and Film Munich (HFF).",
+    photo: "speakers/Georg B.jpeg",
+    linkedin: "https://www.linkedin.com/in/georg-baier",
+    w: "01",
+    confirmed: true
+  },
+  {
+    name: "Daniel Delgado",
+    role: "Producer & Hobbyist Game Dev",
+    company: "Independent",
+    bio: "Passionate producer with nearly a decade of experience across mobile and console, in small and large organizations, in Colombia and Europe. Firm believer that great teams make great products.",
+    photo: "speakers/Daniel D.jpeg",
+    linkedin: "https://www.linkedin.com/in/vennnot",
+    w: "01",
+    confirmed: true
+  },
+  {
+    name: "Aashrit Parvangada",
+    role: "Speaker",
+    company: "",
+    bio: "Bringing unique perspectives on game development, culture, and the industry to Göttingen Game Studio.",
+    photo: "",
+    linkedin: "https://www.linkedin.com/in/aashritparvangada",
+    w: "01",
+    confirmed: true
+  },
 ];
 
 const TEAM_MEMBERS = [
@@ -1248,7 +1278,10 @@ function Speakers() {
             return (
               <div className="sp-featured-card" key={i}>
                 <div className="sp-featured-photo">
-                  <img src={s.photo} alt={s.name} loading="lazy" />
+                  {s.photo
+                    ? <img src={s.photo} alt={s.name} loading="lazy" />
+                    : <div className="sp-avatar-fallback">{s.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2)}</div>
+                  }
                 </div>
                 <div className="sp-featured-info">
                   <div className="sp-featured-header">
